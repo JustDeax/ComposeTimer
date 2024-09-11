@@ -50,7 +50,7 @@ fun DisplayTime(
         ) {
             if (miniClock) {
                 Text(
-                    text = "${formatSeconds(milliseconds)}.",
+                    text = "${formatSeconds(milliseconds/1000)}.",
                     fontSize = 60.sp,
                     fontFamily = FontFamily.Monospace,
                 )
@@ -62,7 +62,7 @@ fun DisplayTime(
                 )
             } else {
                 Text(
-                    text = "${formatSeconds(milliseconds)}.",
+                    text = "${formatSeconds(milliseconds/1000)}.",
                     fontSize = 90.sp,
                     fontFamily = FontFamily.Monospace
                 )

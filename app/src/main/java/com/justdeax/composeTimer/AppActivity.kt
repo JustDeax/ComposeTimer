@@ -94,7 +94,7 @@ class AppActivity : ComponentActivity() {
                         if (isRunning)
                             viewModel.pause()
                         else
-                            viewModel.startResume()
+                            viewModel.startResume(60 * 1000)
                     }) {
                         Text("START/PAUSE")
                     }

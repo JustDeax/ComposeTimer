@@ -37,7 +37,7 @@ class TimerViewModel2(application: Application) : AndroidViewModel(application) 
         isRunning.value = true
         timeLeftInMillis = timeInMillis
 
-        countDownTimer = object : CountDownTimer(timeLeftInMillis, 1000) {
+        countDownTimer = object : CountDownTimer(timeLeftInMillis, 100) {
             override fun onTick(millisUntilFinished: Long) {
                 remainingTime.value = millisUntilFinished
                 timeLeftInMillis = millisUntilFinished
@@ -47,7 +47,7 @@ class TimerViewModel2(application: Application) : AndroidViewModel(application) 
                 isStarted.value = false
             }
         }.start()
-        setAlarm(timeInMillis)
+        //setAlarm(timeInMillis)
     }
 
     fun pause() {
