@@ -6,6 +6,7 @@ import android.content.Intent
 class TimerReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context?, intent: Intent?) {
         //Timer finished
+        //TODO MAKE NOTIFICATION AND CANCEL PENDING INTENT
     }
 }
 

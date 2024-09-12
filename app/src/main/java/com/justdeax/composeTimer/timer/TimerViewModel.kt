@@ -1,128 +1,105 @@
 package com.justdeax.composeTimer.timer
 import android.app.AlarmManager
-import android.app.Application
-import android.app.PendingIntent
-import android.content.Context
-import android.content.Intent
-import androidx.lifecycle.AndroidViewModel
+import android.os.CountDownTimer
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.ViewModel
 
-class TimerViewModel(application: Application) : AndroidViewModel(application) {
-    private val _timeLeft = MutableLiveData<Long>()
-    val timeLeft: LiveData<Long> = _timeLeft
-    private val _isRunning = MutableLiveData<Boolean>()
-    val isRunning: LiveData<Boolean> = _isRunning
+class TimerViewModel(
+    private val alarmManager: AlarmManager,
+    private val navigator: AlarmSettingsNavigator
+) : ViewModel() {
+    private var countDownTimer: CountDownTimer? = null
 
-    private var alarmManager: AlarmManager = application.getSystemService(Context.ALARM_SERVICE) as AlarmManager
-    private var timeRemaining: Long = 0L
+    private val remainingTime = MutableLiveData(0L)
+    private val isRunning = MutableLiveData(false)
+    private val isStarted = MutableLiveData(false)
 
-    private val pendingIntent: PendingIntent
-        get() = PendingIntent.getBroadcast(
-            getApplication(),
-            0,
-            Intent(getApplication(), TimerReceiver::class.java),
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-        )
+    val remainingTimeI: LiveData<Long> = remainingTime
+    val isRunningI: LiveData<Boolean> = isRunning
+    val isStartedI: LiveData<Boolean> = isStarted
 
-    fun startResume(duration: Long) {
-        if (_isRunning.value!!) {
-            _timeLeft.value = duration
-            timeRemaining = duration
-        } else {
-            _isRunning.value = false
-        }
-
-        val triggerAtMillis = System.currentTimeMillis() + timeRemaining
-        try {
-            alarmManager.setExact(AlarmManager.RTC_WAKEUP, triggerAtMillis, pendingIntent)
-        } catch (_: SecurityException) { }
+    fun setTime(time: Long) {
+        remainingTime.value = time
     }
 
-    fun pauseTimer() {
-        _isRunning.value = false
-        alarmManager.cancel(pendingIntent)
+    fun startResume() {
+        isStarted.value = true
+        isRunning.value = true
+        navigator.setAlarm(remainingTime.value ?: 1000L)
+        countDownTimer = object : CountDownTimer(remainingTime.value ?: 1000L, 100) {
+            override fun onTick(millisUntilFinished: Long) {
+                remainingTime.value = millisUntilFinished
+            }
+            override fun onFinish() {
+                isRunning.value = false
+                isStarted.value = false
+            }
+        }.start()
     }
 
-    fun cancelTimer() {
-        _isRunning.value = false
-        alarmManager.cancel(pendingIntent)
-        _timeLeft.value = 0L
+    fun pause() {
+        countDownTimer?.cancel()
+        isRunning.value = false
     }
 
-    fun updateTimeLeft(timeLeft: Long) {
-        _timeLeft.value = timeLeft
-        timeRemaining = timeLeft
+    fun reset(timeInMillis: Long) {
+        countDownTimer?.cancel()
+        remainingTime.value = timeInMillis
+        isStarted.value = false
+        isRunning.value = false
     }
 }
 
-//class CountdownTimerViewModel(private val context: Context) : ViewModel() {
-//    private val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
-//    private var startTimeMillis = 0L
+//import android.os.CountDownTimer
+//import androidx.lifecycle.LiveData
+//import androidx.lifecycle.MutableLiveData
+//import androidx.lifecycle.ViewModel
 //
-//    fun setTime(time: Long) { timeRemaining.value = time }
+//class TimerViewModel2 : ViewModel() {
+//    private var countDownTimer: CountDownTimer? = null
+//
+//    fun setTime(time: Long) {
+//        remainingTime.value = time
+//    }
 //
 //    fun startResume() {
-//        startTimeMillis = System.currentTimeMillis()
-//
-//        val intent = Intent(context, TimerExpiredReceiver::class.java)
-//        val pendingIntent = PendingIntent.getBroadcast(context, 0, intent, PendingIntent.FLAG_IMMUTABLE)
-//        val triggerTime = startTimeMillis + timeRemaining.value!!
-//
-//        if (canScheduleExactAlarms(alarmManager)) {
-//            try {
-//                alarmManager.setExact(AlarmManager.RTC_WAKEUP, triggerTime, pendingIntent)
-//                isStarted.value = true
-//                isPaused.value = false
-//                updateUITimer()
-//            } catch (e: SecurityException) {
-//                Toast.makeText(context, "Cannot schedule exact alarm: permission not granted", Toast.LENGTH_SHORT).show()
+//        isRunning.value = true
+//        isStarted.value = true
+//        countDownTimer = object : CountDownTimer(remainingTime.value!!, 100) {
+//            override fun onTick(millisUntilFinished: Long) {
+//                remainingTime.value = millisUntilFinished
 //            }
-//        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-//            Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM)
-//            context.startActivity(intent)
-//        }
+//            override fun onFinish() {
+//                remainingTime.value = 0
+//                isRunning.value = false
+//                isStarted.value = false
+//            }
+//        }.start()
 //    }
 //
 //    fun pause() {
-//        val elapsedMillis = System.currentTimeMillis() - startTimeMillis
-//        timeRemaining.value = timeRemaining.value!! - elapsedMillis
-//        reset()
-//        isPaused.value = true
+//        countDownTimer?.cancel()
+//        isRunning.value = false
 //    }
 //
-//    fun reset() {
-//        val intent = Intent(context, TimerExpiredReceiver::class.java)
-//        val pendingIntent = PendingIntent.getBroadcast(context, 0, intent, PendingIntent.FLAG_IMMUTABLE)
-//
-//        alarmManager.cancel(pendingIntent)
-//        isStarted.value = false
+//    fun reset(resetTime: Long) {
+//        countDownTimer?.cancel()
+//        remainingTime.value = resetTime
+//        isRunning.value = true
+//        isStarted.value = true
 //    }
 //
-//    private fun updateUITimer() {
-//        viewModelScope.launch {
-//            while (isStarted.value!! && !isPaused.value!!) {
-//                val elapsedMillis = System.currentTimeMillis() - startTimeMillis
-//                val remainingMillis = timeRemaining.value!! - elapsedMillis
-//                timeRemaining.value = remainingMillis
-//
-//                if (remainingMillis <= 0) {
-//                    isStarted.value = false
-//                    break
-//                }
-//
-//                delay(1000L)
-//            }
-//        }
-//    }
-//
-//    private val isStarted = MutableLiveData(false)
-//    private val isPaused = MutableLiveData(false)
-//    private val timeRemaining = MutableLiveData(0L)
-//    //private val elapsedSec = MutableLiveData(0L)
+//    private var isStarted = MutableLiveData(false)
+//    private var isRunning = MutableLiveData(false)
+//    private val remainingTime = MutableLiveData(0L)
 //
 //    val isStartedI: LiveData<Boolean> get() = isStarted
-//    val isPausedI: LiveData<Boolean> get() = isPaused
-//    val timeRemainingI: LiveData<Long> get() = timeRemaining
-//    //val elapsedSecI: LiveData<Long> get() = elapsedSec
+//    val isRunningI: LiveData<Boolean> get() = isRunning
+//    val remainingTimeI: LiveData<Long> get() = remainingTime
+//
+//    override fun onCleared() {
+//        super.onCleared()
+//        countDownTimer?.cancel()
+//    }
 //}

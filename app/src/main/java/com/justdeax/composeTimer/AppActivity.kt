@@ -35,8 +35,8 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.justdeax.composeTimer.timer.AlarmSettingsNavigator
 import com.justdeax.composeTimer.timer.TimerReceiver
-import com.justdeax.composeTimer.timer.TimerViewModel2
-import com.justdeax.composeTimer.timer.TimerViewModelFactory2
+import com.justdeax.composeTimer.timer.TimerViewModel
+import com.justdeax.composeTimer.timer.TimerViewModelFactory
 import com.justdeax.composeTimer.ui.DisplayTime
 import com.justdeax.composeTimer.ui.theme.DarkColorScheme
 import com.justdeax.composeTimer.ui.theme.ExtraDarkColorScheme
@@ -55,8 +55,8 @@ class AppActivity : ComponentActivity(), AlarmSettingsNavigator {
 
     @Composable
     fun AppScreen() {
-        val viewModel: TimerViewModel2 = viewModel(
-            factory = TimerViewModelFactory2(
+        val viewModel: TimerViewModel = viewModel(
+            factory = TimerViewModelFactory(
                 getSystemService(ALARM_SERVICE) as AlarmManager,
                 this
             )
@@ -65,7 +65,7 @@ class AppActivity : ComponentActivity(), AlarmSettingsNavigator {
     }
 
     @Composable
-    fun TimerScreen(viewModel: TimerViewModel2) {
+    fun TimerScreen(viewModel: TimerViewModel) {
         val isRunning by viewModel.isRunningI.observeAsState(false)
         val timeLeft by viewModel.remainingTimeI.observeAsState(0)
         val theme = 0
