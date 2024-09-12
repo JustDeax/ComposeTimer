@@ -8,3 +8,7 @@ class TimerReceiver : BroadcastReceiver() {
         //Timer finished
     }
 }
+
+interface AlarmSettingsNavigator {
+    fun setAlarm(timeInMillis: Long)
+}

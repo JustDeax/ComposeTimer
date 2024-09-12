@@ -1,10 +1,16 @@
 package com.justdeax.composeTimer
-import android.app.Application
+import android.app.AlarmManager
+import android.app.PendingIntent
+import android.content.Context
+import android.content.Intent
 import android.os.Build
 import android.os.Bundle
+import android.provider.Settings
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.annotation.RequiresApi
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -25,9 +31,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.justdeax.composeTimer.timer.AlarmSettingsNavigator
+import com.justdeax.composeTimer.timer.TimerReceiver
 import com.justdeax.composeTimer.timer.TimerViewModel2
 import com.justdeax.composeTimer.timer.TimerViewModelFactory2
 import com.justdeax.composeTimer.ui.DisplayTime
@@ -36,18 +43,23 @@ import com.justdeax.composeTimer.ui.theme.ExtraDarkColorScheme
 import com.justdeax.composeTimer.ui.theme.LightColorScheme
 import com.justdeax.composeTimer.ui.theme.Typography
 
-class AppActivity : ComponentActivity() {
+class AppActivity : ComponentActivity(), AlarmSettingsNavigator {
+    private lateinit var alarmManager: AlarmManager
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        alarmManager = application.getSystemService(Context.ALARM_SERVICE) as AlarmManager
         setContent { AppScreen() }
     }
 
     @Composable
     fun AppScreen() {
-        val context = LocalContext.current.applicationContext as Application
         val viewModel: TimerViewModel2 = viewModel(
-            factory = TimerViewModelFactory2(context)
+            factory = TimerViewModelFactory2(
+                getSystemService(ALARM_SERVICE) as AlarmManager,
+                this
+            )
         )
         TimerScreen(viewModel)
     }
@@ -93,13 +105,52 @@ class AppActivity : ComponentActivity() {
                     Button(onClick = {
                         if (isRunning)
                             viewModel.pause()
-                        else
-                            viewModel.startResume(60 * 1000)
+                        else {
+                            viewModel.setTime(63*1000)
+                            viewModel.startResume()
+                        }
                     }) {
                         Text("START/PAUSE")
                     }
                 }
             }
         }
+    }
+
+    override fun setAlarm(timeInMillis: Long) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S)
+            try {
+                if (alarmManager.canScheduleExactAlarms())
+                    scheduleExactAlarm(timeInMillis)
+                else
+                    openExactAlarmSettings()
+
+            } catch (e: SecurityException) {
+                Log.e("TimerViewModel", "SecurityException: Unable to schedule exact alarm. ${e.message}")
+                openExactAlarmSettings()
+            }
+        else
+            scheduleExactAlarm(timeInMillis)
+    }
+
+    private fun scheduleExactAlarm(timeInMillis: Long) {
+        val alarmIntent = Intent(application, TimerReceiver::class.java)
+        val pendingIntent = PendingIntent.getBroadcast(
+            application,
+            0,
+            alarmIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+        alarmManager.setExactAndAllowWhileIdle(
+            AlarmManager.RTC_WAKEUP,
+            System.currentTimeMillis() + timeInMillis,
+            pendingIntent
+        )
+    }
+
+    @RequiresApi(Build.VERSION_CODES.S)
+    private fun openExactAlarmSettings() {
+        val intent = Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM)
+        startActivity(intent)
     }
 }
