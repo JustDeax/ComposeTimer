@@ -106,7 +106,7 @@ class AppActivity : ComponentActivity(), AlarmSettingsNavigator {
                         if (isRunning)
                             viewModel.pause()
                         else {
-                            viewModel.setTime(63*1000)
+                            viewModel.setTime(6*1000)
                             viewModel.startResume()
                         }
                     }) {
@@ -124,13 +124,23 @@ class AppActivity : ComponentActivity(), AlarmSettingsNavigator {
                     scheduleExactAlarm(timeInMillis)
                 else
                     openExactAlarmSettings()
-
             } catch (e: SecurityException) {
                 Log.e("TimerViewModel", "SecurityException: Unable to schedule exact alarm. ${e.message}")
                 openExactAlarmSettings()
             }
         else
             scheduleExactAlarm(timeInMillis)
+    }
+
+    override fun removeAlarm() {
+        val alarmIntent = Intent(application, TimerReceiver::class.java)
+        val pendingIntent = PendingIntent.getBroadcast(
+            application,
+            0,
+            alarmIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+        alarmManager.cancel(pendingIntent)
     }
 
     private fun scheduleExactAlarm(timeInMillis: Long) {

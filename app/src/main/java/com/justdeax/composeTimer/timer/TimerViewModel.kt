@@ -39,11 +39,13 @@ class TimerViewModel(
     }
 
     fun pause() {
+        navigator.removeAlarm()
         countDownTimer?.cancel()
         isRunning.value = false
     }
 
     fun reset(timeInMillis: Long) {
+        navigator.removeAlarm()
         countDownTimer?.cancel()
         remainingTime.value = timeInMillis
         isStarted.value = false
