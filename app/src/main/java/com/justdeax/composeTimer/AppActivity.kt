@@ -156,11 +156,23 @@ class AppActivity : ComponentActivity(), AlarmSettingsNavigator {
                             if (isRunning)
                                 viewModel.pause()
                             else {
+                                viewModel.startResume()
+                            }
+                        }) {
+                            Text("RESUME/PAUSE")
+                        }
+
+                        Button(onClick = {
+                            if (isRunning)
+                                viewModel.reset(6*1000)
+                            else {
+                                if (isStarted)
+                                    viewModel.reset(6*1000)
                                 viewModel.setTime(6*1000)
                                 viewModel.startResume()
                             }
                         }) {
-                            Text("START/PAUSE")
+                            Text("START/STOP")
                         }
                     }
                 }
