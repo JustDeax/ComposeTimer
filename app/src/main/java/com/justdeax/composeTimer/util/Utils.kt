@@ -18,6 +18,7 @@ fun Long.toFormatString()
         = formatSeconds(this / 1000) + "." + displayMs(this)
 
 data class TimerState(
-    val remainingTime: Long,
+    val timerDuration: Long,
+    val startTime: Long,
     val isRunning: Boolean
 )

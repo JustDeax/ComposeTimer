@@ -15,9 +15,7 @@ class TimerViewModel(
     private val dataStoreManager: DataStoreManager,
     private val navigator: AlarmSettingsNavigator
 ) : ViewModel() {
-    private var timeBeforePause = 0L
     private var startTime = 0L
-    private var timerDuration = 0L
     val theme = dataStoreManager.getTheme().asLiveData()
     val tapOnClock = dataStoreManager.getTapOnClock().asLiveData()
     val foregroundEnabled = dataStoreManager.foregroundEnabled().asLiveData()
@@ -40,73 +38,59 @@ class TimerViewModel(
 //        }
 //    }
 
-    fun saveTimer() {
+    fun restoreTimer() {
+        viewModelScope.launch {
+            dataStoreManager.restoreTimer().collect { restoredState ->
+                remainingTime.value = restoredState.timerDuration
+                isStarted.value = restoredState.timerDuration != 0L
+                isRunning.value = restoredState.isRunning
+                if (isRunning.value!!) {
+                    startTime = restoredState.startTime
+                    startResume(remainingTime.value!!)
+                }
+            }
+        }
+    }
+
+    fun startResume(timerDuration: Long) {
+        isStarted.value = true
+        isRunning.value = true
+        navigator.setAlarm(timerDuration)
+        viewModelScope.launch(Dispatchers.IO) {
+            if (startTime == 0L) startTime = System.currentTimeMillis()
+            dataStoreManager.saveTimer(
+                TimerState(timerDuration, startTime, isRunning.value!!)
+            )
+            while (isRunning.value!!) {
+                val deltaTime = System.currentTimeMillis() - startTime
+                if (deltaTime >= timerDuration)
+                    reset()
+                else
+                    remainingTime.postValue(timerDuration - deltaTime)
+                delay(100L)
+            }
+        }
+    }
+
+    fun pause() {
+        isRunning.value = false
+        navigator.removeAlarm()
+        startTime = 0L
         viewModelScope.launch {
             dataStoreManager.saveTimer(
-                TimerState(
-                    remainingTime.value!!,
-                    isRunning.value!!
-                )
+                TimerState(remainingTime.value!!, 0L, false)
             )
         }
     }
 
-    fun restoreTimer() {
-        viewModelScope.launch {
-            dataStoreManager.restoreTimer().collect { restoredState ->
-                remainingTime.value = restoredState.remainingTime
-                isStarted.value = restoredState.remainingTime != 0L
-                isRunning.value = restoredState.isRunning
-                if (isRunning.value!!)
-                    startResume()
-            }
-        }
-    }
-
-
-    fun setTime(time: Long) {
-        timerDuration = time
-    }
-
-    fun startResume() {
-        isStarted.value = true
-        isRunning.value = true
-        navigator.setAlarm(remainingTime.value ?: 1000L)
-        viewModelScope.launch(Dispatchers.IO) {
-            if (startTime == 0L) startTime = System.currentTimeMillis()
-            while (isRunning.value!!) {
-                val deltaTime = System.currentTimeMillis() - startTime
-                remainingTime.postValue((timerDuration - deltaTime) + timeBeforePause)
-                delay(100L)
-            }
-        }
-//        countDownTimer = object : CountDownTimer(remainingTime.value ?: 1000L, 100) {
-//            override fun onTick(millisUntilFinished: Long) {
-//                remainingTime.value = millisUntilFinished
-//            }
-//            override fun onFinish() {
-//                isRunning.value = false
-//                isStarted.value = false
-//            }
-//        }.start()
-    }
-
-    fun pause() {
-        navigator.removeAlarm()
-        isRunning.value = false
-        timeBeforePause = remainingTime.value!!
-    }
-
-    fun reset(timeInMillis: Long) {
+    fun reset() {
         navigator.removeAlarm()
         viewModelScope.launch {
             isStarted.value = false
             isRunning.value = false
-            timerDuration = timeInMillis
             remainingTime.value = 0L
-            timeBeforePause = 0L
             startTime = 0L
-            dataStoreManager.resetStopwatch()
+            dataStoreManager.resetTimer()
             viewModelScope.coroutineContext.cancelChildren()
         }
     }

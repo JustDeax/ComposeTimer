@@ -13,7 +13,8 @@ private val Context.dataStore: DataStore<Preferences> by preferencesDataStore("p
 
 class DataStoreManager(private val context: Context) {
     companion object { //CT => COUNTDOWN TIMER
-        private val CT_REMAINING_TIME = longPreferencesKey("CT_REMAINING_TIME")
+        private val CT_TIMER_DURATION = longPreferencesKey("CT_TIMER_DURATION")
+        private val CT_START_TIME = longPreferencesKey("CT_START_TIME")
         private val CT_IS_RUNNING = booleanPreferencesKey("ST_IS_RUNNING")
         private val CT_FOREGROUND_ENABLED = booleanPreferencesKey("ST_FOREGROUND_ENABLED")
         private val CT_TAP_ON_CLOCK = intPreferencesKey("ST_TAP_ON_CLOCK")
@@ -46,21 +47,24 @@ class DataStoreManager(private val context: Context) {
 
     suspend fun saveTimer(timerState: TimerState) {
         context.dataStore.edit { set ->
-            set[CT_REMAINING_TIME] = timerState.remainingTime
+            set[CT_TIMER_DURATION] = timerState.timerDuration
+            set[CT_START_TIME] = timerState.startTime
             set[CT_IS_RUNNING] = timerState.isRunning
         }
     }
 
     fun restoreTimer() = context.dataStore.data.map { get ->
         TimerState(
-            get[CT_REMAINING_TIME] ?: 0L,
+            get[CT_TIMER_DURATION] ?: 0L,
+            get[CT_START_TIME] ?: 0L,
             get[CT_IS_RUNNING] ?: false
         )
     }
 
-    suspend fun resetStopwatch() {
+    suspend fun resetTimer() {
         context.dataStore.edit { set ->
-            set.remove(CT_REMAINING_TIME)
+            set.remove(CT_TIMER_DURATION)
+            set.remove(CT_START_TIME)
             set.remove(CT_IS_RUNNING)
         }
     }

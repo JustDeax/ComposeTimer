@@ -8,12 +8,10 @@ import android.content.res.Configuration
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
-import androidx.annotation.RequiresApi
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -45,6 +43,8 @@ import com.justdeax.composeTimer.timer.AlarmSettingsNavigator
 import com.justdeax.composeTimer.timer.TimerReceiver
 import com.justdeax.composeTimer.timer.TimerViewModel
 import com.justdeax.composeTimer.timer.TimerViewModelFactory
+import com.justdeax.composeTimer.ui.DisplayEditTime
+import com.justdeax.composeTimer.ui.DisplayKeyboard
 import com.justdeax.composeTimer.ui.DisplayTime
 import com.justdeax.composeTimer.ui.theme.DarkColorScheme
 import com.justdeax.composeTimer.ui.theme.ExtraDarkColorScheme
@@ -79,11 +79,6 @@ class AppActivity : ComponentActivity(), AlarmSettingsNavigator {
                 )
             }
         }
-    }
-
-    override fun onStop() {
-        super.onStop()
-        if (!viewModel.foregroundEnabled.value!!) viewModel.saveTimer()
     }
 
     @Composable
@@ -138,25 +133,39 @@ class AppActivity : ComponentActivity(), AlarmSettingsNavigator {
                 }
                 if (isPortrait) {
                     Column(Modifier.padding(innerPadding)) {
-                        DisplayTime(
-                            Modifier
-                                .animateContentSize()
-                                .fillMaxWidth()
-                                .padding(10.dp)
-                                .heightIn(min = 100.dp)
-                                .clickable(
-                                    indication = null,
-                                    interactionSource = remember { MutableInteractionSource() }
-                                ) { /**TODO **/ },
-                            true,
-                            !isRunning,
-                            remainingTime
-                        )
+                        if (isStarted)
+                            DisplayTime(
+                                Modifier
+                                    .animateContentSize()
+                                    .fillMaxWidth()
+                                    .padding(10.dp)
+                                    .heightIn(min = 100.dp)
+                                    .clickable(
+                                        indication = null,
+                                        interactionSource = remember { MutableInteractionSource() }
+                                    ) { /**TODO **/ },
+                                true,
+                                !isRunning,
+                                remainingTime
+                            )
+                        else
+                            DisplayEditTime(
+                                Modifier
+                                    .animateContentSize()
+                                    .fillMaxWidth()
+                                    .padding(10.dp)
+                                    .heightIn(min = 100.dp)
+                                    .clickable(
+                                        indication = null,
+                                        interactionSource = remember { MutableInteractionSource() }
+                                    ) { /**TODO **/ }
+                            )
+                        DisplayKeyboard()
                         Button(onClick = {
                             if (isRunning)
                                 viewModel.pause()
                             else {
-                                viewModel.startResume()
+                                viewModel.startResume(remainingTime)
                             }
                         }) {
                             Text("RESUME/PAUSE")
@@ -164,12 +173,9 @@ class AppActivity : ComponentActivity(), AlarmSettingsNavigator {
 
                         Button(onClick = {
                             if (isRunning)
-                                viewModel.reset(6*1000)
+                                viewModel.reset()
                             else {
-                                if (isStarted)
-                                    viewModel.reset(6*1000)
-                                viewModel.setTime(6*1000)
-                                viewModel.startResume()
+                                viewModel.startResume(20*1000)
                             }
                         }) {
                             Text("START/STOP")
@@ -186,10 +192,9 @@ class AppActivity : ComponentActivity(), AlarmSettingsNavigator {
                 if (alarmManager.canScheduleExactAlarms())
                     scheduleExactAlarm(timeInMillis)
                 else
-                    openExactAlarmSettings()
+                    startActivity(Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM))
             } catch (e: SecurityException) {
-                Log.e("TimerViewModel", "SecurityException: Unable to schedule exact alarm. ${e.message}")
-                openExactAlarmSettings()
+                startActivity(Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM))
             }
         else
             scheduleExactAlarm(timeInMillis)
@@ -207,7 +212,6 @@ class AppActivity : ComponentActivity(), AlarmSettingsNavigator {
     }
 
     private fun scheduleExactAlarm(timeInMillis: Long) {
-        Log.d("TimerReceiver", "scheduleExactAlarm")
         val alarmIntent = Intent(application, TimerReceiver::class.java)
         val pendingIntent = PendingIntent.getBroadcast(
             application,
@@ -220,12 +224,5 @@ class AppActivity : ComponentActivity(), AlarmSettingsNavigator {
             System.currentTimeMillis() + timeInMillis,
             pendingIntent
         )
-    }
-
-    @RequiresApi(Build.VERSION_CODES.S)
-    private fun openExactAlarmSettings() {
-        Log.d("TimerReceiver", "openExactAlarmSettings")
-        val intent = Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM)
-        startActivity(intent)
     }
 }

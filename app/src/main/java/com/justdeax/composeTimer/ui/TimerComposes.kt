@@ -4,9 +4,13 @@ import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.material3.Text
@@ -15,6 +19,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -72,6 +77,58 @@ fun DisplayTime(
                     fontFamily = FontFamily.Monospace,
                     modifier = Modifier.offset(y = 45.dp)
                 )
+            }
+        }
+    }
+}
+
+@Composable
+fun DisplayEditTime(
+    modifier: Modifier
+) {
+    Row(
+        modifier = modifier,
+        horizontalArrangement = Arrangement.Center,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            modifier = Modifier.alpha(0.5f).padding(4.dp),
+            text = "00h",
+            fontSize = 60.sp,
+            fontFamily = FontFamily.Monospace,
+        )
+        Text(
+            modifier = Modifier.padding(4.dp),
+            text = "00m",
+            fontSize = 60.sp,
+            fontFamily = FontFamily.Monospace,
+        )
+        Text(
+            modifier = Modifier.padding(4.dp),
+            text = "00s",
+            fontSize = 60.sp,
+            fontFamily = FontFamily.Monospace,
+        )
+    }
+}
+
+@Composable
+fun DisplayKeyboard() {
+    val numberOfColumns = 3
+    Column {
+        repeat(numberOfColumns) { rowIndex ->
+            Row {
+                repeat(3) { columnIndex ->
+                    Box(
+                        modifier = Modifier
+                            .border(1.dp, Color.Black)
+                            .padding(4.dp)
+                            .weight(1f),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text((rowIndex * numberOfColumns + columnIndex + 1).toString())
+                    }
+                }
             }
         }
     }
