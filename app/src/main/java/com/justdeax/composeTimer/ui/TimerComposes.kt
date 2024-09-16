@@ -4,7 +4,6 @@ import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -19,10 +18,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.justdeax.composeTimer.AppActivity
+import com.justdeax.composeTimer.R
 import com.justdeax.composeTimer.util.displayMs
 import com.justdeax.composeTimer.util.formatSeconds
 
@@ -94,41 +95,57 @@ fun DisplayEditTime(
         Text(
             modifier = Modifier.alpha(0.5f).padding(4.dp),
             text = "00h",
-            fontSize = 60.sp,
+            fontSize = 50.sp,
             fontFamily = FontFamily.Monospace,
         )
         Text(
             modifier = Modifier.padding(4.dp),
             text = "00m",
-            fontSize = 60.sp,
+            fontSize = 50.sp,
             fontFamily = FontFamily.Monospace,
         )
         Text(
             modifier = Modifier.padding(4.dp),
             text = "00s",
-            fontSize = 60.sp,
+            fontSize = 50.sp,
             fontFamily = FontFamily.Monospace,
         )
     }
 }
 
 @Composable
-fun DisplayKeyboard() {
-    val numberOfColumns = 3
-    Column {
-        repeat(numberOfColumns) { rowIndex ->
-            Row {
-                repeat(3) { columnIndex ->
-                    Box(
-                        modifier = Modifier
-                            .border(1.dp, Color.Black)
-                            .padding(4.dp)
-                            .weight(1f),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text((rowIndex * numberOfColumns + columnIndex + 1).toString())
+fun DisplayKeyboard(
+    modifier: Modifier,
+    activity: AppActivity
+) {
+    Box(
+        modifier = modifier,
+        contentAlignment = Alignment.Center
+    ) {
+        val numberOfColumns = 3
+        val backspaceDrawable = painterResource(R.drawable.round_backspace_24)
+        val startDrawable = painterResource(R.drawable.round_play_arrow_24)
+
+        Column {
+            repeat(numberOfColumns) { rowIndex ->
+                Row {
+                    repeat(3) { columnIndex ->
+                        TextButton((rowIndex * numberOfColumns + columnIndex + 1).toByte())
                     }
                 }
+            }
+            Row {
+                IconButton(
+                    onClick = {},
+                    painter = backspaceDrawable,
+                    contentDesc = activity.getString(R.string.backspace)
+                )
+                TextButton(0)
+                IconButton(
+                    onClick = {},
+                    painter = startDrawable,
+                    contentDesc = activity.getString(R.string.start)
+                )
             }
         }
     }

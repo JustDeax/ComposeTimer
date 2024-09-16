@@ -3,4 +3,6 @@
     <string name="app_version" translatable="false">1.0</string>
     <string name="app_author" translatable="false">JustDeax (https://github.com/JustDeax)</string>
 
+    <string name="backspace">Backspace</string>
+    <string name="start">Start</string>
 </resources>

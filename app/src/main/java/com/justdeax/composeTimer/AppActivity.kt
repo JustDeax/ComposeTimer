@@ -160,7 +160,11 @@ class AppActivity : ComponentActivity(), AlarmSettingsNavigator {
                                         interactionSource = remember { MutableInteractionSource() }
                                     ) { /**TODO **/ }
                             )
-                        DisplayKeyboard()
+                        DisplayKeyboard(
+                            Modifier
+                                .fillMaxWidth(),
+                            this@AppActivity
+                        )
                         Button(onClick = {
                             if (isRunning)
                                 viewModel.pause()
