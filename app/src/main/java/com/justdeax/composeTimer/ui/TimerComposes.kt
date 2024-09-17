@@ -85,38 +85,63 @@ fun DisplayTime(
 
 @Composable
 fun DisplayEditTime(
-    modifier: Modifier
+    modifier: Modifier,
+    miniClock: Boolean,
+    timeText: String
 ) {
     Row(
         modifier = modifier,
         horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(
-            modifier = Modifier.alpha(0.5f).padding(4.dp),
-            text = "00h",
-            fontSize = 50.sp,
-            fontFamily = FontFamily.Monospace,
-        )
-        Text(
-            modifier = Modifier.padding(4.dp),
-            text = "00m",
-            fontSize = 50.sp,
-            fontFamily = FontFamily.Monospace,
-        )
-        Text(
-            modifier = Modifier.padding(4.dp),
-            text = "00s",
-            fontSize = 50.sp,
-            fontFamily = FontFamily.Monospace,
-        )
+        if (miniClock) {
+            Text(
+                modifier = Modifier.alpha(0.5f).padding(4.dp),
+                text = timeText.substring(0, 2) + "h",
+                fontSize = 50.sp,
+                fontFamily = FontFamily.Monospace,
+            )
+            Text(
+                modifier = Modifier.padding(4.dp),
+                text = timeText.substring(2, 4) + "m",
+                fontSize = 50.sp,
+                fontFamily = FontFamily.Monospace,
+            )
+            Text(
+                modifier = Modifier.padding(4.dp),
+                text = timeText.substring(4, 6) + "s",
+                fontSize = 50.sp,
+                fontFamily = FontFamily.Monospace,
+            )
+        } else {
+            Text(
+                modifier = Modifier.alpha(0.5f).padding(4.dp),
+                text = timeText.substring(0, 2) + "h",
+                fontSize = 90.sp,
+                fontFamily = FontFamily.Monospace,
+            )
+            Text(
+                modifier = Modifier.padding(4.dp),
+                text = timeText.substring(2, 4) + "m",
+                fontSize = 90.sp,
+                fontFamily = FontFamily.Monospace,
+            )
+            Text(
+                modifier = Modifier.padding(4.dp),
+                text = timeText.substring(4, 6) + "s",
+                fontSize = 90.sp,
+                fontFamily = FontFamily.Monospace,
+            )
+        }
     }
 }
 
 @Composable
 fun DisplayKeyboard(
     modifier: Modifier,
-    activity: AppActivity
+    activity: AppActivity,
+    isRunning: Boolean,
+    remainingTime: Long
 ) {
     Box(
         modifier = modifier,
@@ -130,22 +155,36 @@ fun DisplayKeyboard(
             repeat(numberOfColumns) { rowIndex ->
                 Row {
                     repeat(3) { columnIndex ->
-                        TextButton((rowIndex * numberOfColumns + columnIndex + 1).toByte())
+                        val number = rowIndex * numberOfColumns + columnIndex + 1
+                        TextButton(number.toString()) {
+                            activity.viewModel.appendEditText((number + '0'.code).toChar())
+                        }
                     }
                 }
             }
             Row {
                 IconButton(
-                    onClick = {},
                     painter = backspaceDrawable,
                     contentDesc = activity.getString(R.string.backspace)
-                )
-                TextButton(0)
+                ) {
+                    if (isRunning)
+                        activity.viewModel.pause()
+                    else
+                        activity.viewModel.startResume(remainingTime)
+                }
+                TextButton("0") {
+                    activity.viewModel.appendEditText('0')
+                }
                 IconButton(
-                    onClick = {},
                     painter = startDrawable,
                     contentDesc = activity.getString(R.string.start)
-                )
+                ) {
+                    if (isRunning)
+                        activity.viewModel.reset()
+                    else {
+                        activity.viewModel.startResume(20*1000)
+                    }
+                }
             }
         }
     }

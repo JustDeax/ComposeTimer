@@ -1,4 +1,7 @@
 package com.justdeax.composeTimer.timer
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -94,6 +97,19 @@ class TimerViewModel(
             viewModelScope.coroutineContext.cancelChildren()
         }
     }
+
+    fun appendEditText(number: Char) {
+        val charArray = editTime.toCharArray()
+        charArray[position] = number
+        editTime = String(charArray)
+        if (position == 5)
+            position = 0
+        else
+            position++
+    }
+
+    private var position = 0
+    var editTime by mutableStateOf("000000")
 
     private val isStarted = MutableLiveData(false)
     private val isRunning = MutableLiveData(false)

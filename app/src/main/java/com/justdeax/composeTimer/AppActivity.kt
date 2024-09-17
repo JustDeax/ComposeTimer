@@ -12,19 +12,18 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
-import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Button
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.runtime.Composable
@@ -34,6 +33,7 @@ import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.unit.dp
@@ -133,57 +133,59 @@ class AppActivity : ComponentActivity(), AlarmSettingsNavigator {
                 }
                 if (isPortrait) {
                     Column(Modifier.padding(innerPadding)) {
-                        if (isStarted)
-                            DisplayTime(
-                                Modifier
-                                    .animateContentSize()
-                                    .fillMaxWidth()
-                                    .padding(10.dp)
-                                    .heightIn(min = 100.dp)
-                                    .clickable(
-                                        indication = null,
-                                        interactionSource = remember { MutableInteractionSource() }
-                                    ) { /**TODO **/ },
-                                true,
-                                !isRunning,
-                                remainingTime
-                            )
-                        else
-                            DisplayEditTime(
-                                Modifier
-                                    .animateContentSize()
-                                    .fillMaxWidth()
-                                    .padding(10.dp)
-                                    .heightIn(min = 100.dp)
-                                    .clickable(
-                                        indication = null,
-                                        interactionSource = remember { MutableInteractionSource() }
-                                    ) { /**TODO **/ }
-                            )
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .weight(1f),
+                            contentAlignment = Alignment.TopStart
+                        ) {
+//                            DisplayAppName(
+//                                Modifier.padding(21.dp, 16.dp),
+//                                this@AppActivity,
+//                                !isStarted
+//                            )
+                            if (isStarted) {
+                                DisplayTime(
+                                    Modifier
+                                        .fillMaxWidth()
+                                        .padding(10.dp)
+                                        .heightIn(min = 100.dp)
+                                        .clickable(
+                                            indication = null,
+                                            interactionSource = remember { MutableInteractionSource() }
+                                        ) {
+//                                        clickOnClock(
+//                                            tapOnClock,
+//                                            isRunning,
+//                                            notificationEnabled
+//                                        )
+                                        },
+                                    true,
+                                    !isRunning,
+                                    remainingTime
+                                )
+                            } else {
+                                DisplayEditTime(
+                                    Modifier.fillMaxWidth(),
+                                    true,
+                                    viewModel.editTime
+                                )
+                            }
+                        }
                         DisplayKeyboard(
                             Modifier
-                                .fillMaxWidth(),
-                            this@AppActivity
+                                .fillMaxWidth()
+                                .wrapContentHeight(),
+                            this@AppActivity,
+                            isRunning,
+                            remainingTime
                         )
-                        Button(onClick = {
-                            if (isRunning)
-                                viewModel.pause()
-                            else {
-                                viewModel.startResume(remainingTime)
-                            }
-                        }) {
-                            Text("RESUME/PAUSE")
-                        }
 
-                        Button(onClick = {
-                            if (isRunning)
-                                viewModel.reset()
-                            else {
-                                viewModel.startResume(20*1000)
-                            }
-                        }) {
-                            Text("START/STOP")
-                        }
+//                        isStarted,
+//                        isRunning,
+//                        additionalActionsShow,
+//                        showAdditionals = { newState -> additionalActionsShow = newState },
+//                        notificationEnabled
                     }
                 }
             }
