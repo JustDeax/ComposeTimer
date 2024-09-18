@@ -12,8 +12,6 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -30,9 +28,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
@@ -87,15 +82,16 @@ class AppActivity : ComponentActivity(), AlarmSettingsNavigator {
         if (foregroundEnabled) {
             //TODO
             @Suppress("BooleanLiteralArgument")
-            TimerScreen(true, false, false, 0L)
+            TimerScreen(true, false, false, 0L, 0L)
         } else {
             LaunchedEffect(Unit) {
                 viewModel.restoreTimer()
             }
             val isStarted by viewModel.isStartedI.observeAsState(false)
             val isRunning by viewModel.isRunningI.observeAsState(false)
-            val remainingTime by viewModel.remainingTimeI.observeAsState(0L)
-            TimerScreen(false, isStarted, isRunning, remainingTime)
+            val remainingMs by viewModel.remainingMsI.observeAsState(0L)
+            val remainingSec by viewModel.remainingSecI.observeAsState(0L)
+            TimerScreen(false, isStarted, isRunning, remainingMs, remainingSec)
         }
     }
 
@@ -104,11 +100,10 @@ class AppActivity : ComponentActivity(), AlarmSettingsNavigator {
         foregroundEnabled: Boolean,
         isStarted: Boolean,
         isRunning: Boolean,
-        remainingTime: Long,
+        remainingMs: Long,
+        remainingSec: Long
     ) {
-        var additionalActionsShow by remember { mutableStateOf(false) }
         val theme by viewModel.theme.observeAsState(0)
-        //val tapOnClock by viewModel.tapOnClock.observeAsState(0)
         val configuration = LocalConfiguration.current
         val isPortrait = configuration.orientation == Configuration.ORIENTATION_PORTRAIT
         val colorScheme = when (theme) {
@@ -128,9 +123,6 @@ class AppActivity : ComponentActivity(), AlarmSettingsNavigator {
         }
         MaterialTheme(colorScheme = colorScheme, typography = Typography) {
             Scaffold(Modifier.fillMaxSize()) { innerPadding ->
-                LaunchedEffect(Unit) {
-                    if (!isStarted) additionalActionsShow = true
-                }
                 if (isPortrait) {
                     Column(Modifier.padding(innerPadding)) {
                         Box(
@@ -149,20 +141,11 @@ class AppActivity : ComponentActivity(), AlarmSettingsNavigator {
                                     Modifier
                                         .fillMaxWidth()
                                         .padding(10.dp)
-                                        .heightIn(min = 100.dp)
-                                        .clickable(
-                                            indication = null,
-                                            interactionSource = remember { MutableInteractionSource() }
-                                        ) {
-//                                        clickOnClock(
-//                                            tapOnClock,
-//                                            isRunning,
-//                                            notificationEnabled
-//                                        )
-                                        },
+                                        .heightIn(min = 100.dp),
                                     true,
                                     !isRunning,
-                                    remainingTime
+                                    remainingMs,
+                                    remainingSec
                                 )
                             } else {
                                 DisplayEditTime(
@@ -178,14 +161,9 @@ class AppActivity : ComponentActivity(), AlarmSettingsNavigator {
                                 .wrapContentHeight(),
                             this@AppActivity,
                             isRunning,
-                            remainingTime
+                            remainingMs
                         )
-
-//                        isStarted,
-//                        isRunning,
-//                        additionalActionsShow,
-//                        showAdditionals = { newState -> additionalActionsShow = newState },
-//                        notificationEnabled
+//                        isStarted,isRunning,notificationEnabled
                     }
                 }
             }

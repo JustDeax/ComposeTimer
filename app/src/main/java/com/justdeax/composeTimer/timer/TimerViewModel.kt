@@ -20,18 +20,11 @@ class TimerViewModel(
 ) : ViewModel() {
     private var startTime = 0L
     val theme = dataStoreManager.getTheme().asLiveData()
-    val tapOnClock = dataStoreManager.getTapOnClock().asLiveData()
     val foregroundEnabled = dataStoreManager.foregroundEnabled().asLiveData()
 
 //    fun changeTheme(themeCode: Int) {
 //        viewModelScope.launch {
 //            dataStoreManager.changeTheme(themeCode)
-//        }
-//    }
-//
-//    fun changeTapOnClock(tapType: Int) {
-//        viewModelScope.launch {
-//            dataStoreManager.changeTapOnClock(tapType)
 //        }
 //    }
 //
@@ -44,12 +37,12 @@ class TimerViewModel(
     fun restoreTimer() {
         viewModelScope.launch {
             dataStoreManager.restoreTimer().collect { restoredState ->
-                remainingTime.value = restoredState.timerDuration
+                remainingMs.value = restoredState.timerDuration
                 isStarted.value = restoredState.timerDuration != 0L
                 isRunning.value = restoredState.isRunning
                 if (isRunning.value!!) {
                     startTime = restoredState.startTime
-                    startResume(remainingTime.value!!)
+                    startResume(remainingMs.value!!)
                 }
             }
         }
@@ -61,15 +54,15 @@ class TimerViewModel(
         navigator.setAlarm(timerDuration)
         viewModelScope.launch(Dispatchers.IO) {
             if (startTime == 0L) startTime = System.currentTimeMillis()
-            dataStoreManager.saveTimer(
-                TimerState(timerDuration, startTime, isRunning.value!!)
-            )
+            dataStoreManager.saveTimer(TimerState(timerDuration, startTime, isRunning.value!!))
             while (isRunning.value!!) {
                 val deltaTime = System.currentTimeMillis() - startTime
                 if (deltaTime >= timerDuration)
                     reset()
                 else
-                    remainingTime.postValue(timerDuration - deltaTime)
+                    remainingMs.postValue(timerDuration - deltaTime)
+                val seconds = remainingMs.value!! / 1000
+                if (remainingSec.value != seconds) remainingSec.postValue(seconds)
                 delay(100L)
             }
         }
@@ -80,9 +73,7 @@ class TimerViewModel(
         navigator.removeAlarm()
         startTime = 0L
         viewModelScope.launch {
-            dataStoreManager.saveTimer(
-                TimerState(remainingTime.value!!, 0L, false)
-            )
+            dataStoreManager.saveTimer(TimerState(remainingMs.value!!, startTime, false))
         }
     }
 
@@ -91,7 +82,8 @@ class TimerViewModel(
         viewModelScope.launch {
             isStarted.value = false
             isRunning.value = false
-            remainingTime.value = 0L
+            remainingMs.value = 0L
+            remainingSec.value = 0L
             startTime = 0L
             dataStoreManager.resetTimer()
             viewModelScope.coroutineContext.cancelChildren()
@@ -113,9 +105,11 @@ class TimerViewModel(
 
     private val isStarted = MutableLiveData(false)
     private val isRunning = MutableLiveData(false)
-    private val remainingTime = MutableLiveData(0L)
+    private val remainingMs = MutableLiveData(0L)
+    private val remainingSec = MutableLiveData(0L)
 
     val isStartedI: LiveData<Boolean> = isStarted
     val isRunningI: LiveData<Boolean> = isRunning
-    val remainingTimeI: LiveData<Long> = remainingTime
+    val remainingMsI: LiveData<Long> = remainingMs
+    val remainingSecI: LiveData<Long> = remainingSec
 }

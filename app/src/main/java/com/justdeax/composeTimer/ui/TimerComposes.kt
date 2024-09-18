@@ -32,6 +32,7 @@ fun DisplayTime(
     modifier: Modifier,
     miniClock: Boolean,
     isPausing: Boolean,
+    seconds: Long,
     milliseconds: Long
 ) {
     val infiniteTransition = rememberInfiniteTransition(label = "")
@@ -56,7 +57,7 @@ fun DisplayTime(
         ) {
             if (miniClock) {
                 Text(
-                    text = "${formatSeconds(milliseconds/1000)}.",
+                    text = "${formatSeconds(seconds)}.",
                     fontSize = 60.sp,
                     fontFamily = FontFamily.Monospace,
                 )
@@ -68,7 +69,7 @@ fun DisplayTime(
                 )
             } else {
                 Text(
-                    text = "${formatSeconds(milliseconds/1000)}.",
+                    text = "${formatSeconds(seconds)}.",
                     fontSize = 90.sp,
                     fontFamily = FontFamily.Monospace
                 )
@@ -143,14 +144,21 @@ fun DisplayKeyboard(
     isRunning: Boolean,
     remainingTime: Long
 ) {
+    val backspaceDrawable = painterResource(R.drawable.round_backspace_24)
+    val startDrawable = painterResource(R.drawable.round_play_arrow_24)
+    val pauseDrawable = painterResource(R.drawable.round_pause_24)
+    val stopDrawable = painterResource(R.drawable.round_stop_24)
+//    val startButtonSizeAnimation by animateIntAsState(
+//        targetValue = if (isStarted) 120 else 300,
+//        animationSpec = keyframes { durationMillis = 250 },
+//        label = ""
+//    )
+
     Box(
         modifier = modifier,
         contentAlignment = Alignment.Center
     ) {
         val numberOfColumns = 3
-        val backspaceDrawable = painterResource(R.drawable.round_backspace_24)
-        val startDrawable = painterResource(R.drawable.round_play_arrow_24)
-
         Column {
             repeat(numberOfColumns) { rowIndex ->
                 Row {
@@ -176,8 +184,10 @@ fun DisplayKeyboard(
                     activity.viewModel.appendEditText('0')
                 }
                 IconButton(
-                    painter = startDrawable,
-                    contentDesc = activity.getString(R.string.start)
+                    painter = if (isRunning) pauseDrawable else startDrawable,
+                    contentDesc =
+                    if (isRunning) activity.getString(R.string.pause)
+                    else activity.getString(R.string.resume)
                 ) {
                     if (isRunning)
                         activity.viewModel.reset()

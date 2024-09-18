@@ -17,6 +17,10 @@ fun formatSeconds(timeInSeconds: Long): String {
 fun Long.toFormatString()
         = formatSeconds(this / 1000) + "." + displayMs(this)
 
+enum class TimerAction {
+    START_RESUME, PAUSE, RESET
+}
+
 data class TimerState(
     val timerDuration: Long,
     val startTime: Long,

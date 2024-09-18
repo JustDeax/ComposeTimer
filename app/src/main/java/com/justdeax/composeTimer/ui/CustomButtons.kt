@@ -1,17 +1,13 @@
 package com.justdeax.composeTimer.ui
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.aspectRatio
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -25,25 +21,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.delay
-
-@Composable
-fun OutlineIconButton(modifier: Modifier, onClick: () -> Unit, painter: Painter, contentDesc: String) {
-    Box {
-        OutlinedButton(
-            modifier = modifier
-                .width(90.dp)
-                .height(60.dp)
-                .padding(5.dp),
-            onClick = onClick,
-        ) {
-            Icon(
-                painter = painter,
-                contentDescription = contentDesc,
-                tint = MaterialTheme.colorScheme.outline
-            )
-        }
-    }
-}
 
 @Composable
 fun TextButton(number: String, onClick: () -> Unit) {

@@ -17,7 +17,6 @@ class DataStoreManager(private val context: Context) {
         private val CT_START_TIME = longPreferencesKey("CT_START_TIME")
         private val CT_IS_RUNNING = booleanPreferencesKey("ST_IS_RUNNING")
         private val CT_FOREGROUND_ENABLED = booleanPreferencesKey("ST_FOREGROUND_ENABLED")
-        private val CT_TAP_ON_CLOCK = intPreferencesKey("ST_TAP_ON_CLOCK")
         private val APP_THEME = intPreferencesKey("APP_THEME_CODE")
     }
 
@@ -27,14 +26,6 @@ class DataStoreManager(private val context: Context) {
 
     fun getTheme() = context.dataStore.data.map { get ->
         get[APP_THEME] ?: 0
-    }
-
-    suspend fun changeTapOnClock(tapType: Int) {
-        context.dataStore.edit { set -> set[CT_TAP_ON_CLOCK] = tapType }
-    }
-
-    fun getTapOnClock() = context.dataStore.data.map { get ->
-        get[CT_TAP_ON_CLOCK] ?: 1
     }
 
     suspend fun changeForegroundEnabled(enabled: Boolean) {
