@@ -17,6 +17,7 @@ class DataStoreManager(private val context: Context) {
         private val CT_START_TIME = longPreferencesKey("CT_START_TIME")
         private val CT_IS_RUNNING = booleanPreferencesKey("ST_IS_RUNNING")
         private val CT_FOREGROUND_ENABLED = booleanPreferencesKey("ST_FOREGROUND_ENABLED")
+        private val LOCK_AWAKE = booleanPreferencesKey("LOCK_AWAKE")
         private val APP_THEME = intPreferencesKey("APP_THEME_CODE")
     }
 
@@ -34,6 +35,14 @@ class DataStoreManager(private val context: Context) {
 
     fun foregroundEnabled() = context.dataStore.data.map { get ->
         get[CT_FOREGROUND_ENABLED] ?: false //TODO change to TRUE
+    }
+
+    suspend fun changeLockAwakeEnabled(enabled: Boolean) {
+        context.dataStore.edit { set -> set[LOCK_AWAKE] = enabled }
+    }
+
+    fun lockAwakeEnabled() = context.dataStore.data.map { get ->
+        get[LOCK_AWAKE] ?: false
     }
 
     suspend fun saveTimer(timerState: TimerState) {

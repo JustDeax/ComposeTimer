@@ -21,18 +21,25 @@ class TimerViewModel(
     private var startTime = 0L
     val theme = dataStoreManager.getTheme().asLiveData()
     val foregroundEnabled = dataStoreManager.foregroundEnabled().asLiveData()
+    val lockAwakeEnabled = dataStoreManager.lockAwakeEnabled().asLiveData()
 
-//    fun changeTheme(themeCode: Int) {
-//        viewModelScope.launch {
-//            dataStoreManager.changeTheme(themeCode)
-//        }
-//    }
-//
-//    fun changeForegroundEnabled(enabled: Boolean) {
-//        viewModelScope.launch {
-//            dataStoreManager.changeForegroundEnabled(enabled)
-//        }
-//    }
+    fun changeTheme(themeCode: Int) {
+        viewModelScope.launch {
+            dataStoreManager.changeTheme(themeCode)
+        }
+    }
+
+    fun changeForegroundEnabled(enabled: Boolean) {
+        viewModelScope.launch {
+            dataStoreManager.changeForegroundEnabled(enabled)
+        }
+    }
+
+    fun changeLockAwakeEnabled(enabled: Boolean) {
+        viewModelScope.launch {
+            dataStoreManager.changeLockAwakeEnabled(enabled)
+        }
+    }
 
     fun restoreTimer() {
         viewModelScope.launch {
@@ -91,13 +98,21 @@ class TimerViewModel(
     }
 
     fun appendEditText(number: Char) {
-        val charArray = editTime.toCharArray()
-        charArray[position] = number
-        editTime = String(charArray)
-        if (position == 5)
-            position = 0
-        else
+        if (position != 6) {
+            val charArray = editTime.toCharArray()
+            charArray[position] = number
+            editTime = String(charArray)
             position++
+        }
+    }
+
+    fun backspaceEditTet() {
+        if (position != 0) {
+            position--
+            val charArray = editTime.toCharArray()
+            charArray[position] = '0'
+            editTime = String(charArray)
+        }
     }
 
     private var position = 0

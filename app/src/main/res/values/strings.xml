@@ -3,6 +3,47 @@
     <string name="app_version" translatable="false">1.0</string>
     <string name="app_author" translatable="false">JustDeax (https://github.com/JustDeax)</string>
 
+    <string name="cancel">Cancel</string>
+    <string name="ok">OK</string>
+    <string name="apply">Apply</string>
+
+    <string name="stopwatch_channel">Stopwatch notifications</string>
+    <string name="stopwatch_running">Stopwatch running</string>
+    <string name="stopwatch_pausing">Stopwatch paused</string>
     <string name="backspace">Backspace</string>
-    <string name="start">Start</string>
+    <string name="pause">Pause</string>
+    <string name="resume">Resume</string>
+    <string name="stop">Stop</string>
+
+    <string name="additional_action">Additional Actions</string>
+    <string name="multi_timer">Multi Timer</string>
+    <string name="turn_off_notif">Turn on/off notification</string>
+    <string name="theme">Theme</string>
+    <string name="lock_awake">Lock Awake</string>
+
+    <string name="reset_stopwatch">Reset Stopwatch?</string>
+    <string name="reset_stopwatch_desc_enable">To enable notifications you need to reset the stopwatch</string>
+    <string name="reset_stopwatch_desc_disable">To disable notifications you need to reset the stopwatch</string>
+
+    <string name="change_theme">Change theme</string>
+    <string name="change_theme_desc">Dynamic theme is only available with android 12+\nExtra Dark theme saves charging for Amoled screen</string>
+    <string-array name="theme">
+        <item name="system">System</item>
+        <item name="light">Light</item>
+        <item name="dark">Dark</item>
+        <item name="extra_dark">Extra Dark</item>
+    </string-array>
+    <string-array name="theme12">
+        <item name="system">System (Dynamic theme)</item>
+        <item name="light">Light</item>
+        <item name="dark">Dark</item>
+        <item name='extra_dark'>Extra Dark</item>
+    </string-array>
+
+    <string name="lock_awake_mode">Screen Awake Mode</string>
+    <string name="lock_awake_mode_desc_enable">The screen wake-up mode is switched on</string>
+    <string name="lock_awake_mode_desc_disable">The screen wake-up mode is switched off</string>
+
+    <string name="about_app">About Compose Stopwatch</string>
+
 </resources>

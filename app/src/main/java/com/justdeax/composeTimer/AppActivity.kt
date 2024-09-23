@@ -8,6 +8,7 @@ import android.content.res.Configuration
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
+import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -28,9 +29,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -38,6 +43,7 @@ import com.justdeax.composeTimer.timer.AlarmSettingsNavigator
 import com.justdeax.composeTimer.timer.TimerReceiver
 import com.justdeax.composeTimer.timer.TimerViewModel
 import com.justdeax.composeTimer.timer.TimerViewModelFactory
+import com.justdeax.composeTimer.ui.DisplayActions
 import com.justdeax.composeTimer.ui.DisplayEditTime
 import com.justdeax.composeTimer.ui.DisplayKeyboard
 import com.justdeax.composeTimer.ui.DisplayTime
@@ -84,15 +90,25 @@ class AppActivity : ComponentActivity(), AlarmSettingsNavigator {
             @Suppress("BooleanLiteralArgument")
             TimerScreen(true, false, false, 0L, 0L)
         } else {
-            LaunchedEffect(Unit) {
-                viewModel.restoreTimer()
-            }
+            LaunchedEffect(Unit) { viewModel.restoreTimer() }
             val isStarted by viewModel.isStartedI.observeAsState(false)
             val isRunning by viewModel.isRunningI.observeAsState(false)
             val remainingMs by viewModel.remainingMsI.observeAsState(0L)
             val remainingSec by viewModel.remainingSecI.observeAsState(0L)
             TimerScreen(false, isStarted, isRunning, remainingMs, remainingSec)
         }
+    }
+
+    @Preview
+    @Composable
+    fun PreviewTimerScreen() {
+        TimerScreen(
+            foregroundEnabled = true,
+            isStarted = false,
+            isRunning = false,
+            remainingMs = 0,
+            remainingSec = 0
+        )
     }
 
     @Composable
@@ -103,7 +119,9 @@ class AppActivity : ComponentActivity(), AlarmSettingsNavigator {
         remainingMs: Long,
         remainingSec: Long
     ) {
+        var additionalActionsShow by remember { mutableStateOf(false) }
         val theme by viewModel.theme.observeAsState(0)
+        val lockAwakeEnabled by viewModel.lockAwakeEnabled.observeAsState(false)
         val configuration = LocalConfiguration.current
         val isPortrait = configuration.orientation == Configuration.ORIENTATION_PORTRAIT
         val colorScheme = when (theme) {
@@ -120,6 +138,12 @@ class AppActivity : ComponentActivity(), AlarmSettingsNavigator {
                     if (isSystemInDarkTheme()) DarkColorScheme else LightColorScheme
                 }
             }
+        }
+        LaunchedEffect(lockAwakeEnabled) {
+            if (lockAwakeEnabled)
+                window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+            else
+                window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         }
         MaterialTheme(colorScheme = colorScheme, typography = Typography) {
             Scaffold(Modifier.fillMaxSize()) { innerPadding ->
@@ -139,32 +163,45 @@ class AppActivity : ComponentActivity(), AlarmSettingsNavigator {
                             if (isStarted) {
                                 DisplayTime(
                                     Modifier
-                                        .fillMaxWidth()
+                                        .fillMaxSize()
                                         .padding(10.dp)
                                         .heightIn(min = 100.dp),
                                     true,
                                     !isRunning,
-                                    remainingMs,
-                                    remainingSec
+                                    remainingSec,
+                                    remainingMs
                                 )
                             } else {
                                 DisplayEditTime(
-                                    Modifier.fillMaxWidth(),
+                                    Modifier.fillMaxSize(),
                                     true,
                                     viewModel.editTime
                                 )
                             }
                         }
+                        DisplayActions(
+                            Modifier
+                                .fillMaxWidth()
+                                .wrapContentHeight()
+                                .padding(8.dp, 8.dp, 8.dp, 14.dp),
+                            this@AppActivity,
+                            true,
+                            !isStarted || additionalActionsShow,
+                            foregroundEnabled,
+                            lockAwakeEnabled
+                        )
                         DisplayKeyboard(
                             Modifier
                                 .fillMaxWidth()
-                                .wrapContentHeight(),
+                                .padding(top = 12.dp, bottom = 42.dp),
                             this@AppActivity,
                             isRunning,
-                            remainingMs
+                            isStarted,
+                            remainingMs,
+                            foregroundEnabled,
+                            additionalActionsShow,
+                            showHideAdditionals = { additionalActionsShow = !additionalActionsShow }
                         )
-
-//                        isStarted,isRunning,notificationEnabled
                     }
                 }
             }
