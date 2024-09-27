@@ -1,38 +1,55 @@
 package com.justdeax.composeTimer.timer
 import android.app.NotificationChannel
 import android.app.NotificationManager
+import android.app.PendingIntent
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.os.Build
-import android.util.Log
 import androidx.core.app.NotificationCompat
+import androidx.core.content.ContextCompat.getString
 import androidx.core.content.ContextCompat.getSystemService
+import com.justdeax.composeTimer.AppActivity
 import com.justdeax.composeTimer.R
 
 class TimerReceiver : BroadcastReceiver() {
-    override fun onReceive(context: Context?, intent: Intent?) {
-        Log.d("TimerReceiver", "onReceive called")
+    private val flag = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S)
+        PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+    else
+        PendingIntent.FLAG_UPDATE_CURRENT
 
+    override fun onReceive(context: Context?, intent: Intent?) {
         context?.let { ctx ->
-             val notification = NotificationCompat.Builder(ctx, "CHANNEL_ID")
+            val pendingIntent = PendingIntent.getActivity(
+                ctx,
+                1,
+                Intent(ctx, AppActivity::class.java),
+                flag
+            )
+            val notification = NotificationCompat.Builder(ctx, NOTIFICATION_CHANNEL_ID)
+                .setAutoCancel(false)
                 .setSmallIcon(R.drawable.ic_launcher_foreground)
-                .setContentTitle("Broadcast Received")
-                .setContentText("Timer Finished")
-                .setPriority(NotificationCompat.PRIORITY_HIGH)
-                .setAutoCancel(true)
+                .setContentTitle(getString(ctx, R.string.timer_finished))
+                .setContentText(getString(ctx, R.string.timer_expired))
+                .setContentIntent(pendingIntent)
                 .build()
-            val notificationManager = getSystemService(ctx, NotificationManager::class.java)
+
+            val notificationManager = getSystemService(ctx, NotificationManager::class.java) as NotificationManager
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                val channel = NotificationChannel(
-                    "CHANNEL_ID",
-                    "Channel Name",
-                    NotificationManager.IMPORTANCE_HIGH
+                val notificationChannel = NotificationChannel(
+                    NOTIFICATION_CHANNEL_ID,
+                    getString(ctx, R.string.timer_channel),
+                    NotificationManager.IMPORTANCE_LOW
                 )
-                notificationManager?.createNotificationChannel(channel)
+                notificationManager.createNotificationChannel(notificationChannel)
             }
-            notificationManager?.notify(2, notification)
+            notificationManager.notify(NOTIFICATION_ID, notification)
         }
+    }
+
+    companion object {
+        private const val NOTIFICATION_ID = 2280
+        private const val NOTIFICATION_CHANNEL_ID = "timer_receiver_channel"
     }
 }
 

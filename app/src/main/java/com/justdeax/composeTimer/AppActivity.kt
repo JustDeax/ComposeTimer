@@ -44,6 +44,7 @@ import com.justdeax.composeTimer.timer.TimerReceiver
 import com.justdeax.composeTimer.timer.TimerViewModel
 import com.justdeax.composeTimer.timer.TimerViewModelFactory
 import com.justdeax.composeTimer.ui.DisplayActions
+import com.justdeax.composeTimer.ui.DisplayAppName
 import com.justdeax.composeTimer.ui.DisplayEditTime
 import com.justdeax.composeTimer.ui.DisplayKeyboard
 import com.justdeax.composeTimer.ui.DisplayTime
@@ -155,11 +156,11 @@ class AppActivity : ComponentActivity(), AlarmSettingsNavigator {
                                 .weight(1f),
                             contentAlignment = Alignment.TopStart
                         ) {
-//                            DisplayAppName(
-//                                Modifier.padding(21.dp, 16.dp),
-//                                this@AppActivity,
-//                                !isStarted
-//                            )
+                            DisplayAppName(
+                                Modifier.padding(21.dp, 16.dp),
+                                this@AppActivity,
+                                !isStarted
+                            )
                             if (isStarted) {
                                 DisplayTime(
                                     Modifier
@@ -175,7 +176,8 @@ class AppActivity : ComponentActivity(), AlarmSettingsNavigator {
                                 DisplayEditTime(
                                     Modifier.fillMaxSize(),
                                     true,
-                                    viewModel.editTime
+                                    viewModel.editTime,
+                                    viewModel.position
                                 )
                             }
                         }
@@ -186,6 +188,7 @@ class AppActivity : ComponentActivity(), AlarmSettingsNavigator {
                                 .padding(8.dp, 8.dp, 8.dp, 14.dp),
                             this@AppActivity,
                             true,
+                            isStarted,
                             !isStarted || additionalActionsShow,
                             foregroundEnabled,
                             lockAwakeEnabled

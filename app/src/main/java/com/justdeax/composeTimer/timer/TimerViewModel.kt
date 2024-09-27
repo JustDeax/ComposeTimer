@@ -1,5 +1,6 @@
 package com.justdeax.composeTimer.timer
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.LiveData
@@ -106,7 +107,7 @@ class TimerViewModel(
         }
     }
 
-    fun backspaceEditTet() {
+    fun backspaceEditText() {
         if (position != 0) {
             position--
             val charArray = editTime.toCharArray()
@@ -115,7 +116,7 @@ class TimerViewModel(
         }
     }
 
-    private var position = 0
+    var position by mutableIntStateOf(0)
     var editTime by mutableStateOf("000000")
 
     private val isStarted = MutableLiveData(false)

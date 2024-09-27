@@ -7,15 +7,18 @@
     <string name="ok">OK</string>
     <string name="apply">Apply</string>
 
-    <string name="stopwatch_channel">Stopwatch notifications</string>
-    <string name="stopwatch_running">Stopwatch running</string>
-    <string name="stopwatch_pausing">Stopwatch paused</string>
+    <string name="timer_channel">Timer notifications</string>
+    <string name="timer_running">Timer running</string>
+    <string name="timer_pausing">Timer paused</string>
+    <string name="timer_finished">Timer finished</string>
+    <string name="timer_expired">Timer expired (0 sec)</string>
     <string name="backspace">Backspace</string>
     <string name="pause">Pause</string>
     <string name="resume">Resume</string>
     <string name="stop">Stop</string>
 
     <string name="additional_action">Additional Actions</string>
+    <string name="add_timer">Add Timer</string>
     <string name="multi_timer">Multi Timer</string>
     <string name="turn_off_notif">Turn on/off notification</string>
     <string name="theme">Theme</string>
@@ -45,5 +48,10 @@
     <string name="lock_awake_mode_desc_disable">The screen wake-up mode is switched off</string>
 
     <string name="about_app">About Compose Stopwatch</string>
+    <string name="about_app_desc">"
+
+"</string>
+    <string name="about_app_desc_a">Author:</string>
+    <string name="about_app_desc_v">\nVersion:</string>
 
 </resources>

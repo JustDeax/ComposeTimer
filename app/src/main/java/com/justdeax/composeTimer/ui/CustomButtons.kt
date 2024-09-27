@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -42,16 +43,20 @@ fun OutlineIconButton(modifier: Modifier, painter: Painter, contentDesc: String,
 }
 
 @Composable
-fun BaseButton(width: Int = 100, height: Int = 100, onClick: () -> Unit, content: @Composable (RowScope.() -> Unit)) {
+fun BaseButton(
+    width: Int = 100,
+    height: Int = 100,
+    isMustBeAnimated: Boolean,
+    onClick: () -> Unit,
+    content: @Composable (RowScope.() -> Unit)
+) {
     var isAnimating by remember { mutableStateOf(false) }
     var cornerRadius by remember { mutableStateOf(50.dp) }
-
     val animatedCornerRadius by animateDpAsState(
         targetValue = cornerRadius,
         animationSpec = tween(durationMillis = 300),
         label = ""
     )
-
     LaunchedEffect(isAnimating) {
         if (isAnimating) {
             cornerRadius = 18.dp
@@ -61,13 +66,14 @@ fun BaseButton(width: Int = 100, height: Int = 100, onClick: () -> Unit, content
             isAnimating = false
         }
     }
-
     Button(
         modifier = Modifier
             .width(width.dp)
             .height(height.dp)
             .padding(8.dp),
-        shape = RoundedCornerShape(animatedCornerRadius),
+        shape =
+        if (isMustBeAnimated) RoundedCornerShape(animatedCornerRadius)
+        else ButtonDefaults.shape,
         onClick = {
             onClick()
             isAnimating = true
@@ -77,8 +83,8 @@ fun BaseButton(width: Int = 100, height: Int = 100, onClick: () -> Unit, content
 }
 
 @Composable
-fun IconButton(painter: Painter, contentDesc: String, onClick: () -> Unit) {
-    BaseButton(100, 85, onClick) {
+fun IconButton(painter: Painter, contentDesc: String, isMustBeAnimated: Boolean, onClick: () -> Unit) {
+    BaseButton(100, 86, isMustBeAnimated, onClick) {
         Icon(
             painter = painter,
             contentDescription = contentDesc,
