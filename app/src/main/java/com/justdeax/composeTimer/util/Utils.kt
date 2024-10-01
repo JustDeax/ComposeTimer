@@ -17,6 +17,12 @@ fun formatSeconds(timeInSeconds: Long): String {
 fun Long.toFormatString()
         = formatSeconds(this / 1000) + "." + displayMs(this)
 
+//fun Context.commandService(serviceState: StopwatchAction) {
+//    val intent = Intent(this, StopwatchService::class.java)
+//    intent.action = serviceState.name
+//    this.startService(intent)
+//}
+
 enum class TimerAction {
     START_RESUME, PAUSE, RESET
 }

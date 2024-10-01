@@ -9,8 +9,10 @@ import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutHorizontally
@@ -40,6 +42,7 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -49,6 +52,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -58,16 +62,16 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.lifecycleScope
-import com.justdeax.composeTimer.AppActivity
 import com.justdeax.composeTimer.R
 import com.justdeax.composeTimer.util.displayMs
 import com.justdeax.composeTimer.util.formatSeconds
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 @Composable
 fun DisplayTime(
     modifier: Modifier,
+    show: Boolean,
     miniClock: Boolean,
     isPausing: Boolean,
     seconds: Long,
@@ -87,36 +91,44 @@ fun DisplayTime(
         horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Row(
-            modifier = Modifier
-                .alpha(if (isPausing) blinkAnimation else 1f)
-                .wrapContentWidth()
-                .wrapContentHeight()
+        androidx.compose.animation.AnimatedVisibility(
+            visible = show,
+            enter = expandVertically(expandFrom = Alignment.CenterVertically),
+            exit = shrinkVertically(shrinkTowards = Alignment.CenterVertically)
+//        enter = fadeIn(tween(500)) + slideInHorizontally(tween(500)) { -80 },
+//        exit = fadeOut(tween(300)) + slideOutHorizontally(tween(300)) { -80 }
         ) {
-            if (miniClock) {
-                Text(
-                    text = "${formatSeconds(seconds)}.",
-                    fontSize = 60.sp,
-                    fontFamily = FontFamily.Monospace,
-                )
-                Text(
-                    text = displayMs(milliseconds),
-                    fontSize = 40.sp,
-                    fontFamily = FontFamily.Monospace,
-                    modifier = Modifier.offset(y = 30.dp)
-                )
-            } else {
-                Text(
-                    text = "${formatSeconds(seconds)}.",
-                    fontSize = 90.sp,
-                    fontFamily = FontFamily.Monospace
-                )
-                Text(
-                    text = displayMs(milliseconds),
-                    fontSize = 60.sp,
-                    fontFamily = FontFamily.Monospace,
-                    modifier = Modifier.offset(y = 45.dp)
-                )
+            Row(
+                modifier = Modifier
+                    .alpha(if (isPausing) blinkAnimation else 1f)
+                    .wrapContentWidth()
+                    .wrapContentHeight()
+            ) {
+                if (miniClock) {
+                    Text(
+                        text = "${formatSeconds(seconds)}.",
+                        fontSize = 60.sp,
+                        fontFamily = FontFamily.Monospace,
+                    )
+                    Text(
+                        text = displayMs(milliseconds),
+                        fontSize = 40.sp,
+                        fontFamily = FontFamily.Monospace,
+                        modifier = Modifier.offset(y = 30.dp)
+                    )
+                } else {
+                    Text(
+                        text = "${formatSeconds(seconds)}.",
+                        fontSize = 90.sp,
+                        fontFamily = FontFamily.Monospace
+                    )
+                    Text(
+                        text = displayMs(milliseconds),
+                        fontSize = 60.sp,
+                        fontFamily = FontFamily.Monospace,
+                        modifier = Modifier.offset(y = 45.dp)
+                    )
+                }
             }
         }
     }
@@ -125,8 +137,9 @@ fun DisplayTime(
 @Composable
 fun DisplayEditTime(
     modifier: Modifier,
+    show: Boolean,
     miniClock: Boolean,
-    timeText: String,
+    editTime: String,
     position: Int
 ) {
     Row(
@@ -134,98 +147,112 @@ fun DisplayEditTime(
         horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        val spanStyle = SpanStyle(textDecoration = TextDecoration.Underline)
-        val hoursText = buildAnnotatedString {
-            when (position) {
-                0 -> {
-                    withStyle(spanStyle) { append(timeText[0]) }
-                    append(timeText[1])
-                }
-                1 -> {
-                    append(timeText[0])
-                    withStyle(spanStyle) { append(timeText[1]) }
-                }
-                else -> {
-                    append(timeText[0])
-                    append(timeText[1])
-                }
-            }
-            append("h")
-        }
-        val minutesText = buildAnnotatedString {
-            when (position) {
-                2 -> {
-                    withStyle(spanStyle) { append(timeText[2]) }
-                    append(timeText[3])
-                }
-                3 -> {
-                    append(timeText[2])
-                    withStyle(spanStyle) { append(timeText[3]) }
-                }
-                else -> {
-                    append(timeText[2])
-                    append(timeText[3])
-                }
-            }
-            append("m")
-        }
-        val secondsText = buildAnnotatedString {
-            when (position) {
-                4 -> {
-                    withStyle(spanStyle) { append(timeText[4]) }
-                    append(timeText[5])
-                }
-                5 -> {
-                    append(timeText[4])
-                    withStyle(spanStyle) { append(timeText[5]) }
-                }
-                else -> {
-                    append(timeText[4])
-                    append(timeText[5])
-                }
-            }
-            append("s")
-        }
-        if (miniClock) {
-            Text(
-                modifier = Modifier.padding(4.dp),
-                text = hoursText,
-                fontSize = 50.sp,
-                fontFamily = FontFamily.Monospace,
-            )
-            Text(
-                modifier = Modifier.padding(4.dp),
-                text = minutesText,
-                fontSize = 50.sp,
-                fontFamily = FontFamily.Monospace,
-            )
-            Text(
-                modifier = Modifier.padding(4.dp),
-                text = secondsText,
-                fontSize = 50.sp,
-                fontFamily = FontFamily.Monospace,
-            )
-        } else {
-            Text(
+        androidx.compose.animation.AnimatedVisibility(
+            visible = show,
+            enter = expandVertically(expandFrom = Alignment.CenterVertically),
+            exit = shrinkVertically(shrinkTowards = Alignment.CenterVertically)
+//        enter = fadeIn(tween(500)) + slideInHorizontally(tween(500)) { -80 },
+//        exit = fadeOut(tween(300)) + slideOutHorizontally(tween(300)) { -80 }
+        ) {
+            Row(
                 modifier = Modifier
-                    .alpha(0.5f)
-                    .padding(4.dp),
-                text = timeText.substring(0, 2) + "h",
-                fontSize = 90.sp,
-                fontFamily = FontFamily.Monospace,
-            )
-            Text(
-                modifier = Modifier.padding(4.dp),
-                text = timeText.substring(2, 4) + "m",
-                fontSize = 90.sp,
-                fontFamily = FontFamily.Monospace,
-            )
-            Text(
-                modifier = Modifier.padding(4.dp),
-                text = timeText.substring(4, 6) + "s",
-                fontSize = 90.sp,
-                fontFamily = FontFamily.Monospace,
-            )
+                    .wrapContentWidth()
+                    .wrapContentHeight()
+            ) {
+                val spanStyle = SpanStyle(textDecoration = TextDecoration.Underline)
+                val hoursText = buildAnnotatedString {
+                    when (position) {
+                        0 -> {
+                            withStyle(spanStyle) { append(editTime[0]) }
+                            append(editTime[1])
+                        }
+                        1 -> {
+                            append(editTime[0])
+                            withStyle(spanStyle) { append(editTime[1]) }
+                        }
+                        else -> {
+                            append(editTime[0])
+                            append(editTime[1])
+                        }
+                    }
+                    append("h")
+                }
+                val minutesText = buildAnnotatedString {
+                    when (position) {
+                        2 -> {
+                            withStyle(spanStyle) { append(editTime[2]) }
+                            append(editTime[3])
+                        }
+                        3 -> {
+                            append(editTime[2])
+                            withStyle(spanStyle) { append(editTime[3]) }
+                        }
+                        else -> {
+                            append(editTime[2])
+                            append(editTime[3])
+                        }
+                    }
+                    append("m")
+                }
+                val secondsText = buildAnnotatedString {
+                    when (position) {
+                        4 -> {
+                            withStyle(spanStyle) { append(editTime[4]) }
+                            append(editTime[5])
+                        }
+                        5 -> {
+                            append(editTime[4])
+                            withStyle(spanStyle) { append(editTime[5]) }
+                        }
+                        else -> {
+                            append(editTime[4])
+                            append(editTime[5])
+                        }
+                    }
+                    append("s")
+                }
+                if (miniClock) {
+                    Text(
+                        modifier = Modifier.padding(4.dp),
+                        text = hoursText,
+                        fontSize = 50.sp,
+                        fontFamily = FontFamily.Monospace,
+                    )
+                    Text(
+                        modifier = Modifier.padding(4.dp),
+                        text = minutesText,
+                        fontSize = 50.sp,
+                        fontFamily = FontFamily.Monospace,
+                    )
+                    Text(
+                        modifier = Modifier.padding(4.dp),
+                        text = secondsText,
+                        fontSize = 50.sp,
+                        fontFamily = FontFamily.Monospace,
+                    )
+                } else {
+                    Text(
+                        modifier = Modifier
+                            .alpha(0.5f)
+                            .padding(4.dp),
+                        text = editTime.substring(0, 2),
+                        fontSize = 90.sp,
+                        fontFamily = FontFamily.Monospace,
+                    )
+                    Text(
+                        modifier = Modifier.padding(4.dp),
+                        text = editTime.substring(2, 4),
+                        fontSize = 90.sp,
+                        fontFamily = FontFamily.Monospace,
+                    )
+                    Text(
+                        modifier = Modifier.padding(4.dp),
+                        text = editTime.substring(4, 6),
+                        fontSize = 90.sp,
+                        fontFamily = FontFamily.Monospace,
+                    )
+                }
+            }
         }
     }
 }
@@ -234,9 +261,9 @@ fun DisplayEditTime(
 @Composable
 fun DisplayAppName(
     modifier: Modifier,
-    activity: AppActivity,
     show: Boolean
 ) {
+    val context = LocalContext.current
     val helpDraw = painterResource(R.drawable.round_help_outline_24)
     var showAboutApp by remember { mutableStateOf(false) }
 
@@ -252,14 +279,14 @@ fun DisplayAppName(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = activity.getString(R.string.app_name),
+                text = context.getString(R.string.app_name),
                 style = MaterialTheme.typography.titleLarge
             )
             Spacer(modifier = Modifier.width(6.dp))
             Icon(
                 modifier = Modifier.size(24.dp),
                 painter = helpDraw,
-                contentDescription = activity.getString(R.string.about_app),
+                contentDescription = context.getString(R.string.about_app),
                 tint = MaterialTheme.colorScheme.onBackground
             )
         }
@@ -283,33 +310,33 @@ fun DisplayAppName(
                         .verticalScroll(scrollState)
                 ) {
                     Text(
-                        text = activity.getString(R.string.about_app),
+                        text = context.getString(R.string.about_app),
                         style = MaterialTheme.typography.titleLarge
                     )
                     Spacer(Modifier.height(8.dp))
                     Text(
-                        text = activity.getString(R.string.about_app_desc),
+                        text = context.getString(R.string.about_app_desc),
                         style = MaterialTheme.typography.titleMedium
                     )
                     val annotatedString = buildAnnotatedString {
-                        append(activity.getString(R.string.about_app_desc_a))
+                        append(context.getString(R.string.about_app_desc_a))
                         withStyle(
                             style = SpanStyle(
                                 color = Color.Blue,
                                 textDecoration = TextDecoration.Underline
                             )
                         ) {
-                            append(" " + activity.getString(R.string.app_author))
+                            append(" " + context.getString(R.string.app_author))
                         }
-                        append(activity.getString(R.string.about_app_desc_v))
-                        append(" " + activity.getString(R.string.app_version))
+                        append(context.getString(R.string.about_app_desc_v))
+                        append(" " + context.getString(R.string.app_version))
                     }
                     Text(
                         text = annotatedString,
                         style = MaterialTheme.typography.titleMedium,
                         modifier = Modifier.clickable {
                             val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/JustDeax"))
-                            activity.startActivity(intent)
+                            context.startActivity(intent)
                         }
                     )
                 }
@@ -325,7 +352,7 @@ fun DisplayAppName(
                             }
                     }
                 ) {
-                    Text(activity.getString(R.string.ok))
+                    Text(context.getString(R.string.ok))
                 }
             }
         }
@@ -335,13 +362,18 @@ fun DisplayAppName(
 @Composable
 fun DisplayActions(
     modifier: Modifier,
-    activity: AppActivity,
     isPortrait: Boolean,
     isStarted: Boolean,
     show: Boolean,
     foregroundEnabled: Boolean,
-    lockAwakeEnabled: Boolean
+    changeForegroundEnabled: () -> Unit,
+    reset: () -> Unit,
+    theme: Int,
+    changeTheme: (Int) -> Unit,
+    lockAwakeEnabled: Boolean,
+    changeLockAwakeEnabled: (Boolean) -> Unit
 ) {
+    val context = LocalContext.current
     val savedTimersDraw = painterResource(R.drawable.round_casino_24)
     val addStopwatchDraw = painterResource(R.drawable.round_add_circle_24)
     val turnOffNotifDraw = painterResource(R.drawable.round_notifications_24)
@@ -368,9 +400,9 @@ fun DisplayActions(
             painter = if (isStarted) addStopwatchDraw else savedTimersDraw,
             contentDesc =
             if (isStarted)
-                activity.getString(R.string.multi_timer)
+                context.getString(R.string.multi_timer)
             else
-                activity.getString(R.string.add_timer)
+                context.getString(R.string.add_timer)
         )
         OutlineIconButton(
             modifier = modifier,
@@ -378,7 +410,7 @@ fun DisplayActions(
                 showResetStopwatchDialog = true
             },
             painter = if (foregroundEnabled) turnOffNotifDraw else turnOnNotifDraw,
-            contentDesc = activity.getString(R.string.turn_off_notif)
+            contentDesc = context.getString(R.string.turn_off_notif)
         )
         OutlineIconButton(
             modifier = modifier,
@@ -386,16 +418,16 @@ fun DisplayActions(
                 showThemeDialog = true
             },
             painter = themeDraw,
-            contentDesc = activity.getString(R.string.theme)
+            contentDesc = context.getString(R.string.theme)
         )
         OutlineIconButton(
             modifier = modifier,
             onClick = {
-                activity.viewModel.changeLockAwakeEnabled(!lockAwakeEnabled)
+                changeLockAwakeEnabled(!lockAwakeEnabled)
                 showLockAwakeDialog = true
             },
             painter = if (lockAwakeEnabled) lockAwake else unlockAwake,
-            contentDesc = activity.getString(R.string.lock_awake)
+            contentDesc = context.getString(R.string.lock_awake)
         )
     }
 
@@ -413,66 +445,62 @@ fun DisplayActions(
 //        )
 //    }
     if (showResetStopwatchDialog) {
-        if (!foregroundEnabled && activity.viewModel.remainingMsI.value!! == 0L) {
-            activity.viewModel.changeForegroundEnabled(true)
-        } else {
+        if (isStarted)
             SimpleDialog(
-                title = activity.getString(R.string.reset_stopwatch),
+                title = context.getString(R.string.reset_stopwatch),
                 desc = if (foregroundEnabled)
-                    activity.getString(R.string.reset_stopwatch_desc_disable)
+                    context.getString(R.string.reset_stopwatch_desc_disable)
                 else
-                    activity.getString(R.string.reset_stopwatch_desc_enable),
+                    context.getString(R.string.reset_stopwatch_desc_enable),
                 isPortrait = isPortrait,
-                confirmText = activity.getString(R.string.ok),
+                confirmText = context.getString(R.string.ok),
                 onConfirm = {
-                    if (foregroundEnabled)
-                        activity.lifecycleScope.launch {
-                            //activity.commandService(StopwatchAction.RESET)
-                            activity.viewModel.changeForegroundEnabled(false)
-                            showResetStopwatchDialog = false
-                        }
-                    else
-                        activity.lifecycleScope.launch {
-                            activity.viewModel.reset()
-                            activity.viewModel.changeForegroundEnabled(true)
-                            showResetStopwatchDialog = false
-                        }
+                    if (foregroundEnabled) //context.commandService(TimerAction.RESET)
+                    else reset()
+                    changeForegroundEnabled()
+                    showResetStopwatchDialog = false
                 },
-                dismissText = activity.getString(R.string.cancel),
+                dismissText = context.getString(R.string.cancel),
                 onDismiss = { showResetStopwatchDialog = false }
             )
-        }
+        else
+            changeForegroundEnabled()
     }
     if (showThemeDialog) {
         RadioDialog(
-            title = activity.getString(R.string.change_theme),
+            title = context.getString(R.string.change_theme),
             isPortrait = isPortrait,
-            desc = activity.getString(R.string.change_theme_desc),
-            defaultIndex = activity.viewModel.theme.value!!,
+            desc = context.getString(R.string.change_theme_desc),
+            defaultIndex = theme,
             options = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S)
-                activity.resources.getStringArray(R.array.theme12)
+                context.resources.getStringArray(R.array.theme12)
             else
-                activity.resources.getStringArray(R.array.theme),
-            setSelectedIndex = { newState -> activity.viewModel.changeTheme(newState)},
+                context.resources.getStringArray(R.array.theme),
+            setSelectedIndex = { newState -> changeTheme(newState)},
             onDismiss = { showThemeDialog = false },
             onConfirm = { showThemeDialog = false },
-            confirmText = activity.getString(R.string.apply)
+            confirmText = context.getString(R.string.apply)
         )
     }
     if (showLockAwakeDialog) {
+        LaunchedEffect(Unit) {
+            delay(2000)
+            showLockAwakeDialog = false
+        }
+
         OkayDialog(
-            title = activity.getString(R.string.lock_awake_mode),
+            title = context.getString(R.string.lock_awake_mode),
             content = {
                 Text(
                     text = if (lockAwakeEnabled)
-                        activity.getString(R.string.lock_awake_mode_desc_enable)
+                        context.getString(R.string.lock_awake_mode_desc_enable)
                     else
-                        activity.getString(R.string.lock_awake_mode_desc_disable),
+                        context.getString(R.string.lock_awake_mode_desc_disable),
                     style = MaterialTheme.typography.titleMedium
                 )
             },
             isPortrait = isPortrait,
-            confirmText = activity.getString(R.string.ok),
+            confirmText = context.getString(R.string.ok),
             onConfirm = { showLockAwakeDialog = false }
         )
     }
@@ -504,19 +532,27 @@ fun DisplayActions(
 @Composable
 fun DisplayKeyboard(
     modifier: Modifier,
-    activity: AppActivity,
-    isRunning: Boolean,
     isStarted: Boolean,
-    remainingTime: Long,
-    notificationEnabled: Boolean,
+    isRunning: Boolean,
+    foregroundEnabled: Boolean,
     isAdditionalsShow: Boolean,
-    showHideAdditionals: () -> Unit
+    showHideAdditionals: () -> Unit,
+    reset: () -> Unit,
+    startResume: (Long) -> Unit,
+    pause: () -> Unit,
+    appendEditText: (Char) -> Unit,
+    backspaceEditText: () -> Unit,
+    clearEditText: () -> Unit,
+    remainingTime: Long,
+    editTime: String,
+    position: Int
 ) {
-    val backspaceDrawable = painterResource(R.drawable.round_backspace_24)
+    val context = LocalContext.current
     val startDrawable = painterResource(R.drawable.round_play_arrow_24)
     val pauseDrawable = painterResource(R.drawable.round_pause_24)
     val stopDrawable = painterResource(R.drawable.round_stop_24)
     val additionalsDrawable = painterResource(R.drawable.round_grid_view_24)
+    val backspaceDrawable = painterResource(R.drawable.round_backspace_24)
 //    val startButtonSizeAnimation by animateIntAsState(
 //        targetValue = if (isStarted) 120 else 300,
 //        animationSpec = keyframes { durationMillis = 250 },
@@ -542,7 +578,7 @@ fun DisplayKeyboard(
                             width = 100,
                             height = 100,
                             isMustBeAnimated = true,
-                            { activity.viewModel.appendEditText((number + '0'.code).toChar()) }
+                            { appendEditText((number + '0'.code).toChar()) }
                         ) {
                             Text(
                                 text = number.toString(),
@@ -557,14 +593,14 @@ fun DisplayKeyboard(
                 IconButton(
                     painter = if (isStarted) additionalsDrawable else backspaceDrawable,
                     contentDesc =
-                    if (isStarted) activity.getString(R.string.additional_action)
-                    else activity.getString(R.string.backspace),
+                    if (isStarted) context.getString(R.string.additional_action)
+                    else context.getString(R.string.backspace),
                     isMustBeAnimated = !isStarted
                 ) {
                     if (isStarted)
                         showHideAdditionals()
                     else
-                        activity.viewModel.backspaceEditText()
+                        backspaceEditText()
                 }
                 BaseButton(
                     width = 100,
@@ -573,40 +609,68 @@ fun DisplayKeyboard(
                     {
                         if (isStarted)
                             if (isRunning)
-                                activity.viewModel.pause()
+                                pause()
                             else
-                                activity.viewModel.startResume(remainingTime)
+                                startResume(remainingTime)
                         else
-                            activity.viewModel.appendEditText('0')
+                            if (position < 6)
+                                appendEditText('0')
+                            else
+                                clearEditText()
                     }
                 ) {
                     if (isStarted)
                         Icon(
                             painter = if (isRunning) pauseDrawable else startDrawable,
                             contentDescription =
-                            if (isRunning) activity.getString(R.string.pause)
-                            else activity.getString(R.string.resume),
+                            if (isRunning) context.getString(R.string.pause)
+                            else context.getString(R.string.resume),
                             tint = MaterialTheme.colorScheme.onPrimary
                         )
                     else
                         Text(
-                            text = "0",
+                            text = if (position < 6) "0" else "C",
                             fontSize = 24.sp,
                             fontWeight = FontWeight.Medium
                         )
                 }
-                IconButton(
-                    painter = if (isRunning) stopDrawable else startDrawable,
-                    contentDesc =
-                    if (isRunning) activity.getString(R.string.stop)
-                    else activity.getString(R.string.resume),
-                    isMustBeAnimated = !isStarted
+                BaseButton(
+                    width = 100,
+                    height = 86,
+                    isMustBeAnimated = false,
+                    {
+                        if (editTime == "000000") {
+                            appendEditText('0')
+                            appendEditText('0')
+                        } else {
+                            if (isAdditionalsShow) showHideAdditionals()
+                            if (isStarted)
+                                reset()
+                            else {
+                                val hours = editTime.substring(0, 2).toInt()
+                                val minutes = editTime.substring(2, 4).toInt()
+                                val seconds = editTime.substring(4, 6).toInt()
+                                val startTime = hours * 3600 + minutes * 60 + seconds
+                                Log.d("TAG", ": START :")
+                                startResume(startTime * 1000L)
+                            }
+                        }
+                    }
                 ) {
-                    if (isAdditionalsShow) showHideAdditionals()
-                    if (isStarted)
-                        activity.viewModel.startResume(20*1000)
+                    if (editTime == "000000")
+                        Text(
+                            text = "00",
+                            fontSize = 24.sp,
+                            fontWeight = FontWeight.Medium
+                        )
                     else
-                        activity.viewModel.startResume(20*1000)
+                        Icon(
+                            painter = if (isStarted) stopDrawable else startDrawable,
+                            contentDescription =
+                            if (isStarted) context.getString(R.string.stop)
+                            else context.getString(R.string.resume),
+                            tint = MaterialTheme.colorScheme.onPrimary
+                        )
                 }
             }
         }

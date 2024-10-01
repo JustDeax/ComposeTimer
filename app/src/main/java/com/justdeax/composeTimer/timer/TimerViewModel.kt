@@ -42,6 +42,21 @@ class TimerViewModel(
         }
     }
 
+    fun saveEditTime() {
+        viewModelScope.launch {
+            dataStoreManager.saveEditTime(editTime, position)
+        }
+    }
+
+    fun restoreEditTime() {
+        viewModelScope.launch {
+            dataStoreManager.restoreEditTime().collect { restoreState ->
+                editTime = restoreState.first
+                position = restoreState.second
+            }
+        }
+    }
+
     fun restoreTimer() {
         viewModelScope.launch {
             dataStoreManager.restoreTimer().collect { restoredState ->
@@ -98,8 +113,14 @@ class TimerViewModel(
         }
     }
 
+    fun clearEditText() {
+        editTime = "000000"
+        position = 0
+        saveEditTime()
+    }
+
     fun appendEditText(number: Char) {
-        if (position != 6) {
+        if (position < 6) {
             val charArray = editTime.toCharArray()
             charArray[position] = number
             editTime = String(charArray)

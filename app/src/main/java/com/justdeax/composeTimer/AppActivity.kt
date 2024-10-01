@@ -55,7 +55,7 @@ import com.justdeax.composeTimer.ui.theme.Typography
 import com.justdeax.composeTimer.util.DataStoreManager
 
 class AppActivity : ComponentActivity(), AlarmSettingsNavigator {
-    val viewModel: TimerViewModel by viewModels {
+    private val viewModel: TimerViewModel by viewModels {
         TimerViewModelFactory(DataStoreManager(this), this)
     }
     private lateinit var alarmManager: AlarmManager
@@ -140,14 +140,15 @@ class AppActivity : ComponentActivity(), AlarmSettingsNavigator {
                 }
             }
         }
-        LaunchedEffect(lockAwakeEnabled) {
-            if (lockAwakeEnabled)
-                window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-            else
-                window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-        }
+
         MaterialTheme(colorScheme = colorScheme, typography = Typography) {
             Scaffold(Modifier.fillMaxSize()) { innerPadding ->
+                LaunchedEffect(lockAwakeEnabled) {
+                    if (lockAwakeEnabled)
+                        window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+                    else
+                        window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+                }
                 if (isPortrait) {
                     Column(Modifier.padding(innerPadding)) {
                         Box(
@@ -158,52 +159,61 @@ class AppActivity : ComponentActivity(), AlarmSettingsNavigator {
                         ) {
                             DisplayAppName(
                                 Modifier.padding(21.dp, 16.dp),
-                                this@AppActivity,
                                 !isStarted
                             )
-                            if (isStarted) {
-                                DisplayTime(
-                                    Modifier
-                                        .fillMaxSize()
-                                        .padding(10.dp)
-                                        .heightIn(min = 100.dp),
-                                    true,
-                                    !isRunning,
-                                    remainingSec,
-                                    remainingMs
-                                )
-                            } else {
-                                DisplayEditTime(
-                                    Modifier.fillMaxSize(),
-                                    true,
-                                    viewModel.editTime,
-                                    viewModel.position
-                                )
-                            }
+                            DisplayTime(
+                                Modifier
+                                    .fillMaxSize()
+                                    .padding(10.dp)
+                                    .heightIn(min = 100.dp),
+                                isStarted,
+                                true,
+                                !isRunning,
+                                remainingSec,
+                                remainingMs
+                            )
+                            DisplayEditTime(
+                                Modifier.fillMaxSize(),
+                                !isStarted,
+                                true,
+                                viewModel.editTime,
+                                viewModel.position
+                            )
                         }
                         DisplayActions(
                             Modifier
                                 .fillMaxWidth()
                                 .wrapContentHeight()
                                 .padding(8.dp, 8.dp, 8.dp, 14.dp),
-                            this@AppActivity,
                             true,
                             isStarted,
                             !isStarted || additionalActionsShow,
                             foregroundEnabled,
-                            lockAwakeEnabled
+                            { viewModel.changeForegroundEnabled(!foregroundEnabled) },
+                            { viewModel.reset() },
+                            theme,
+                            { newState -> viewModel.changeTheme(newState) },
+                            lockAwakeEnabled,
+                            { newState -> viewModel.changeLockAwakeEnabled(newState)}
                         )
                         DisplayKeyboard(
                             Modifier
                                 .fillMaxWidth()
                                 .padding(top = 12.dp, bottom = 42.dp),
-                            this@AppActivity,
-                            isRunning,
                             isStarted,
-                            remainingMs,
+                            isRunning,
                             foregroundEnabled,
                             additionalActionsShow,
-                            showHideAdditionals = { additionalActionsShow = !additionalActionsShow }
+                            { additionalActionsShow = !additionalActionsShow },
+                            { viewModel.reset() },
+                            { newState -> viewModel.startResume(newState) },
+                            { viewModel.pause() },
+                            { newState -> viewModel.appendEditText(newState) },
+                            { viewModel.backspaceEditText() },
+                            { viewModel.clearEditText() },
+                            remainingMs,
+                            viewModel.editTime,
+                            viewModel.position
                         )
                     }
                 }
