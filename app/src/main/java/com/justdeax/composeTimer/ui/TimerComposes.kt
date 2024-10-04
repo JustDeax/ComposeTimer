@@ -9,10 +9,8 @@ import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
-import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutHorizontally
@@ -93,8 +91,8 @@ fun DisplayTime(
     ) {
         androidx.compose.animation.AnimatedVisibility(
             visible = show,
-            enter = expandVertically(expandFrom = Alignment.CenterVertically),
-            exit = shrinkVertically(shrinkTowards = Alignment.CenterVertically)
+//            enter = slideInVertically(tween(500)) { -80 },
+//            exit = slideOutVertically(tween(500)) { -80 }
 //        enter = fadeIn(tween(500)) + slideInHorizontally(tween(500)) { -80 },
 //        exit = fadeOut(tween(300)) + slideOutHorizontally(tween(300)) { -80 }
         ) {
@@ -149,8 +147,8 @@ fun DisplayEditTime(
     ) {
         androidx.compose.animation.AnimatedVisibility(
             visible = show,
-            enter = expandVertically(expandFrom = Alignment.CenterVertically),
-            exit = shrinkVertically(shrinkTowards = Alignment.CenterVertically)
+//            enter = slideInVertically(tween(500)) { -80 },
+//            exit = slideOutVertically(tween(500)) { 200 }
 //        enter = fadeIn(tween(500)) + slideInHorizontally(tween(500)) { -80 },
 //        exit = fadeOut(tween(300)) + slideOutHorizontally(tween(300)) { -80 }
         ) {
@@ -639,7 +637,7 @@ fun DisplayKeyboard(
                     height = 86,
                     isMustBeAnimated = false,
                     {
-                        if (editTime == "000000") {
+                        if (editTime == "000000" || isStarted) {
                             appendEditText('0')
                             appendEditText('0')
                         } else {
@@ -651,13 +649,12 @@ fun DisplayKeyboard(
                                 val minutes = editTime.substring(2, 4).toInt()
                                 val seconds = editTime.substring(4, 6).toInt()
                                 val startTime = hours * 3600 + minutes * 60 + seconds
-                                Log.d("TAG", ": START :")
                                 startResume(startTime * 1000L)
                             }
                         }
                     }
                 ) {
-                    if (editTime == "000000")
+                    if (editTime == "000000" || isStarted)
                         Text(
                             text = "00",
                             fontSize = 24.sp,
