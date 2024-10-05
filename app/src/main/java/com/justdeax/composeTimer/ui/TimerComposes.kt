@@ -24,7 +24,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -52,6 +51,7 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontFamily
@@ -61,19 +61,16 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.justdeax.composeTimer.R
-import com.justdeax.composeTimer.util.displayMs
-import com.justdeax.composeTimer.util.formatSeconds
+import com.justdeax.composeTimer.util.toFormatString
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 @Composable
 fun DisplayTime(
     modifier: Modifier,
-    show: Boolean,
     miniClock: Boolean,
     isPausing: Boolean,
-    seconds: Long,
-    milliseconds: Long
+    seconds: Long
 ) {
     val infiniteTransition = rememberInfiniteTransition(label = "")
     val blinkAnimation by infiniteTransition.animateFloat(
@@ -89,44 +86,24 @@ fun DisplayTime(
         horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        androidx.compose.animation.AnimatedVisibility(
-            visible = show,
-//            enter = slideInVertically(tween(500)) { -80 },
-//            exit = slideOutVertically(tween(500)) { -80 }
-//        enter = fadeIn(tween(500)) + slideInHorizontally(tween(500)) { -80 },
-//        exit = fadeOut(tween(300)) + slideOutHorizontally(tween(300)) { -80 }
+        Row(
+            modifier = Modifier
+                .alpha(if (isPausing) blinkAnimation else 1f)
+                .wrapContentWidth()
+                .wrapContentHeight()
         ) {
-            Row(
-                modifier = Modifier
-                    .alpha(if (isPausing) blinkAnimation else 1f)
-                    .wrapContentWidth()
-                    .wrapContentHeight()
-            ) {
-                if (miniClock) {
-                    Text(
-                        text = "${formatSeconds(seconds)}.",
-                        fontSize = 60.sp,
-                        fontFamily = FontFamily.Monospace,
-                    )
-                    Text(
-                        text = displayMs(milliseconds),
-                        fontSize = 40.sp,
-                        fontFamily = FontFamily.Monospace,
-                        modifier = Modifier.offset(y = 30.dp)
-                    )
-                } else {
-                    Text(
-                        text = "${formatSeconds(seconds)}.",
-                        fontSize = 90.sp,
-                        fontFamily = FontFamily.Monospace
-                    )
-                    Text(
-                        text = displayMs(milliseconds),
-                        fontSize = 60.sp,
-                        fontFamily = FontFamily.Monospace,
-                        modifier = Modifier.offset(y = 45.dp)
-                    )
-                }
+            if (miniClock) {
+                Text(
+                    text = seconds.toFormatString(),
+                    fontSize = 60.sp,
+                    fontFamily = FontFamily.Monospace,
+                )
+            } else {
+                Text(
+                    text = seconds.toFormatString(),
+                    fontSize = 90.sp,
+                    fontFamily = FontFamily.Monospace
+                )
             }
         }
     }
@@ -135,8 +112,6 @@ fun DisplayTime(
 @Composable
 fun DisplayEditTime(
     modifier: Modifier,
-    show: Boolean,
-    miniClock: Boolean,
     editTime: String,
     position: Int
 ) {
@@ -145,113 +120,55 @@ fun DisplayEditTime(
         horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        androidx.compose.animation.AnimatedVisibility(
-            visible = show,
-//            enter = slideInVertically(tween(500)) { -80 },
-//            exit = slideOutVertically(tween(500)) { 200 }
-//        enter = fadeIn(tween(500)) + slideInHorizontally(tween(500)) { -80 },
-//        exit = fadeOut(tween(300)) + slideOutHorizontally(tween(300)) { -80 }
+        Row(
+            modifier = Modifier
+                .wrapContentWidth()
+                .wrapContentHeight()
         ) {
-            Row(
-                modifier = Modifier
-                    .wrapContentWidth()
-                    .wrapContentHeight()
-            ) {
-                val spanStyle = SpanStyle(textDecoration = TextDecoration.Underline)
-                val hoursText = buildAnnotatedString {
-                    when (position) {
-                        0 -> {
-                            withStyle(spanStyle) { append(editTime[0]) }
-                            append(editTime[1])
-                        }
-                        1 -> {
-                            append(editTime[0])
-                            withStyle(spanStyle) { append(editTime[1]) }
-                        }
-                        else -> {
-                            append(editTime[0])
-                            append(editTime[1])
-                        }
-                    }
-                    append("h")
-                }
-                val minutesText = buildAnnotatedString {
-                    when (position) {
-                        2 -> {
-                            withStyle(spanStyle) { append(editTime[2]) }
-                            append(editTime[3])
-                        }
-                        3 -> {
-                            append(editTime[2])
-                            withStyle(spanStyle) { append(editTime[3]) }
-                        }
-                        else -> {
-                            append(editTime[2])
-                            append(editTime[3])
-                        }
-                    }
-                    append("m")
-                }
-                val secondsText = buildAnnotatedString {
-                    when (position) {
-                        4 -> {
-                            withStyle(spanStyle) { append(editTime[4]) }
-                            append(editTime[5])
-                        }
-                        5 -> {
-                            append(editTime[4])
-                            withStyle(spanStyle) { append(editTime[5]) }
-                        }
-                        else -> {
-                            append(editTime[4])
-                            append(editTime[5])
-                        }
-                    }
-                    append("s")
-                }
-                if (miniClock) {
-                    Text(
-                        modifier = Modifier.padding(4.dp),
-                        text = hoursText,
-                        fontSize = 50.sp,
-                        fontFamily = FontFamily.Monospace,
-                    )
-                    Text(
-                        modifier = Modifier.padding(4.dp),
-                        text = minutesText,
-                        fontSize = 50.sp,
-                        fontFamily = FontFamily.Monospace,
-                    )
-                    Text(
-                        modifier = Modifier.padding(4.dp),
-                        text = secondsText,
-                        fontSize = 50.sp,
-                        fontFamily = FontFamily.Monospace,
-                    )
-                } else {
-                    Text(
-                        modifier = Modifier
-                            .alpha(0.5f)
-                            .padding(4.dp),
-                        text = editTime.substring(0, 2),
-                        fontSize = 90.sp,
-                        fontFamily = FontFamily.Monospace,
-                    )
-                    Text(
-                        modifier = Modifier.padding(4.dp),
-                        text = editTime.substring(2, 4),
-                        fontSize = 90.sp,
-                        fontFamily = FontFamily.Monospace,
-                    )
-                    Text(
-                        modifier = Modifier.padding(4.dp),
-                        text = editTime.substring(4, 6),
-                        fontSize = 90.sp,
-                        fontFamily = FontFamily.Monospace,
-                    )
-                }
+            val hoursText = buildTimeText(editTime, position, 0, 1, "h")
+            val minutesText = buildTimeText(editTime, position, 2, 3, "m")
+            val secondsText = buildTimeText(editTime, position, 4, 5, "s")
+
+            Text(
+                modifier = Modifier.padding(4.dp),
+                text = hoursText,
+                fontSize = 50.sp,
+                fontFamily = FontFamily.Monospace,
+            )
+            Text(
+                modifier = Modifier.padding(4.dp),
+                text = minutesText,
+                fontSize = 50.sp,
+                fontFamily = FontFamily.Monospace,
+            )
+            Text(
+                modifier = Modifier.padding(4.dp),
+                text = secondsText,
+                fontSize = 50.sp,
+                fontFamily = FontFamily.Monospace,
+            )
+        }
+    }
+}
+
+private fun buildTimeText(editTime: String, position: Int, firstIndex: Int, secondIndex: Int, suffix: String): AnnotatedString {
+    val spanStyle = SpanStyle(textDecoration = TextDecoration.Underline)
+    return buildAnnotatedString {
+        when (position) {
+            firstIndex -> {
+                withStyle(spanStyle) { append(editTime[firstIndex]) }
+                append(editTime[secondIndex])
+            }
+            secondIndex -> {
+                append(editTime[firstIndex])
+                withStyle(spanStyle) { append(editTime[secondIndex]) }
+            }
+            else -> {
+                append(editTime[firstIndex])
+                append(editTime[secondIndex])
             }
         }
+        append(suffix)
     }
 }
 
@@ -289,6 +206,7 @@ fun DisplayAppName(
             )
         }
     }
+
     val sheetState = rememberModalBottomSheetState()
     val scope = rememberCoroutineScope()
     if (showAboutApp) {
@@ -637,7 +555,7 @@ fun DisplayKeyboard(
                     height = 86,
                     isMustBeAnimated = false,
                     {
-                        if (editTime == "000000" || isStarted) {
+                        if (editTime == "000000" && !isStarted) {
                             appendEditText('0')
                             appendEditText('0')
                         } else {
@@ -654,7 +572,7 @@ fun DisplayKeyboard(
                         }
                     }
                 ) {
-                    if (editTime == "000000" || isStarted)
+                    if (editTime == "000000" && !isStarted)
                         Text(
                             text = "00",
                             fontSize = 24.sp,
