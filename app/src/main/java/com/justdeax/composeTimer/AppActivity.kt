@@ -8,14 +8,12 @@ import android.content.res.Configuration
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
-import android.util.Log
 import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -23,10 +21,8 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Card
@@ -59,11 +55,9 @@ import com.justdeax.composeTimer.timer.AlarmSettingsNavigator
 import com.justdeax.composeTimer.timer.TimerReceiver
 import com.justdeax.composeTimer.timer.TimerViewModel
 import com.justdeax.composeTimer.timer.TimerViewModelFactory
-import com.justdeax.composeTimer.ui.DisplayActions
 import com.justdeax.composeTimer.ui.DisplayAppName
 import com.justdeax.composeTimer.ui.DisplayEditTime
 import com.justdeax.composeTimer.ui.DisplayKeyboard
-import com.justdeax.composeTimer.ui.DisplayTime
 import com.justdeax.composeTimer.ui.theme.DarkColorScheme
 import com.justdeax.composeTimer.ui.theme.ExtraDarkColorScheme
 import com.justdeax.composeTimer.ui.theme.LightColorScheme
@@ -120,8 +114,8 @@ class AppActivity : ComponentActivity(), AlarmSettingsNavigator {
             )
             timers.add(timer)
         }
+        var addTimerScreenShow by remember { mutableStateOf(false) }
 
-        var additionalActionsShow by remember { mutableStateOf(false) }
         val theme by viewModel.theme.observeAsState(0)
         val lockAwakeEnabled by viewModel.lockAwakeEnabled.observeAsState(false)
         val configuration = LocalConfiguration.current
@@ -156,9 +150,12 @@ class AppActivity : ComponentActivity(), AlarmSettingsNavigator {
                             Modifier.padding(21.dp, 16.dp),
                             true
                         )
-                        DisplayTimers(timers)
-                        DisplayOneTimer()
-                        DisplayAddTimer()
+                        if (addTimerScreenShow)
+                            DisplayAddTimer()
+                        else
+                            DisplayTimers(timers) { addTimerScreenShow = true }
+                        //DisplayOneTimer()
+
                     }
                 }
             }
@@ -166,13 +163,10 @@ class AppActivity : ComponentActivity(), AlarmSettingsNavigator {
     }
 
     @Composable
-    fun DisplayTimers(timers: List<TimerState2>) {
-//fun DisplayAddTimer() {
-//    DisplayEditTime()
-//    DisplayActions()
-//    DisplayKeyboard()
-//}
-
+    fun DisplayTimers(
+        timers: List<TimerState2>,
+        changeAddTimerScreenShow: () -> Unit
+    ) {
 //SW
 //Theme
 //LockAwake
@@ -183,14 +177,13 @@ class AppActivity : ComponentActivity(), AlarmSettingsNavigator {
 //CT
 //Theme
 //LockAwake
-//Timer Settings
+//Timer Ending
 //(*) NotificationEnabled
-//=== ShowTimers  Pause/Resume   Stop
+//=== +1 minute  Pause/Resume   Stop
 
 //FOR TIMER
 //Timer sound
 //Timer vibrate
-//AdditionalButton
 //Epilepsy Enabled
 //MAKE ANALYTICS
 //Gradually increase volume ALWAYS TRUE
@@ -238,9 +231,11 @@ class AppActivity : ComponentActivity(), AlarmSettingsNavigator {
                                     Modifier.size(38.dp)
                                 )
                             }
-                            Column(modifier = Modifier
-                                .padding(10.dp, 0.dp)
-                                .weight(1f)) {
+                            Column(
+                                modifier = Modifier
+                                    .padding(10.dp, 0.dp)
+                                    .weight(1f)
+                            ) {
                                 Text(
                                     text = name,
                                     fontSize = 18.sp,
@@ -262,27 +257,29 @@ class AppActivity : ComponentActivity(), AlarmSettingsNavigator {
                                 "",
                                 Modifier.size(32.dp)
                             )
-
                         }
                     }
                 }
             }
             FloatingActionButton(
-                onClick = {},
+                onClick = {
+                    changeAddTimerScreenShow()
+                },
                 modifier = Modifier
                     .padding(bottom = 50.dp)
                     .size(80.dp)
             ) {
                 Icon(
                     addDraw,
-                    ""
+                    "",
+                    Modifier.size(28.dp)
                 )
             }
         }
     }
 
     @Composable
-    fun DisplayOneTimer() {
+    fun DisplayAddTimer() {
 //        DisplayTime(
 //            Modifier
 //                .fillMaxSize()
@@ -295,50 +292,47 @@ class AppActivity : ComponentActivity(), AlarmSettingsNavigator {
 //            remainingMs
 //        )
 
-        DisplayEditTime(
-            Modifier.fillMaxSize(),
-            viewModel.editTime,
-            viewModel.position
-        )
-        DisplayActions(
-            Modifier
-                .fillMaxWidth()
-                .wrapContentHeight()
-                .padding(8.dp, 8.dp, 8.dp, 14.dp),
-            true,
-            isStarted,
-            !isStarted || additionalActionsShow,
-            foregroundEnabled,
-            { viewModel.changeForegroundEnabled(!foregroundEnabled) },
-            { viewModel.reset() },
-            theme,
-            { newState -> viewModel.changeTheme(newState) },
-            lockAwakeEnabled,
-            { newState -> viewModel.changeLockAwakeEnabled(newState)}
-        )
-        DisplayKeyboard(
-            Modifier
-                .fillMaxWidth()
-                .padding(top = 12.dp, bottom = 42.dp),
-            isStarted,
-            isRunning,
-            foregroundEnabled,
-            additionalActionsShow,
-            { additionalActionsShow = !additionalActionsShow },
-            { viewModel.reset() },
-            { newState -> viewModel.startResume(newState) },
-            { viewModel.pause() },
-            { newState -> viewModel.appendEditText(newState) },
-            { viewModel.backspaceEditText() },
-            { viewModel.clearEditText() },
-            remainingMs,
-            viewModel.editTime,
-            viewModel.position
-        )
+        Column {
+            DisplayEditTime(
+                Modifier
+                    .fillMaxWidth()
+                    .weight(1f),
+                viewModel.editTime,
+                viewModel.position
+            )
+            DisplayKeyboard(
+                Modifier
+                    .fillMaxWidth()
+                    .padding(top = 12.dp, bottom = 42.dp),
+                { newState -> viewModel.startResume(newState) },
+                { newState -> viewModel.appendEditText(newState) },
+                { viewModel.backspaceEditText() },
+                { viewModel.clearEditText() },
+                viewModel.editTime,
+                viewModel.position
+            )
+        }
+
+//        DisplayActions(
+//            Modifier
+//                .fillMaxWidth()
+//                .wrapContentHeight()
+//                .padding(8.dp, 8.dp, 8.dp, 14.dp),
+//            true,
+//            isStarted,
+//            !isStarted || additionalActionsShow,
+//            foregroundEnabled,
+//            { viewModel.changeForegroundEnabled(!foregroundEnabled) },
+//            { viewModel.reset() },
+//            theme,
+//            { newState -> viewModel.changeTheme(newState) },
+//            lockAwakeEnabled,
+//            { newState -> viewModel.changeLockAwakeEnabled(newState)}
+//        )
     }
 
     @Composable
-    fun DisplayAddTimer() {
+    fun DisplayOneTimer() {
 
     }
 

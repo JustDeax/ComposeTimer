@@ -4,7 +4,6 @@ import android.net.Uri
 import android.os.Build
 import android.util.Log
 import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
@@ -27,8 +26,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentHeight
-import androidx.compose.foundation.layout.wrapContentWidth
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
@@ -89,8 +87,7 @@ fun DisplayTime(
         Row(
             modifier = Modifier
                 .alpha(if (isPausing) blinkAnimation else 1f)
-                .wrapContentWidth()
-                .wrapContentHeight()
+                .wrapContentSize()
         ) {
             if (miniClock) {
                 Text(
@@ -120,11 +117,7 @@ fun DisplayEditTime(
         horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Row(
-            modifier = Modifier
-                .wrapContentWidth()
-                .wrapContentHeight()
-        ) {
+        Row(modifier = Modifier.wrapContentSize()) {
             val hoursText = buildTimeText(editTime, position, 0, 1, "h")
             val minutesText = buildTimeText(editTime, position, 2, 3, "m")
             val secondsText = buildTimeText(editTime, position, 4, 5, "s")
@@ -151,7 +144,13 @@ fun DisplayEditTime(
     }
 }
 
-private fun buildTimeText(editTime: String, position: Int, firstIndex: Int, secondIndex: Int, suffix: String): AnnotatedString {
+private fun buildTimeText(
+    editTime: String,
+    position: Int,
+    firstIndex: Int,
+    secondIndex: Int,
+    suffix: String
+): AnnotatedString {
     val spanStyle = SpanStyle(textDecoration = TextDecoration.Underline)
     return buildAnnotatedString {
         when (position) {
@@ -448,38 +447,24 @@ fun DisplayActions(
 @Composable
 fun DisplayKeyboard(
     modifier: Modifier,
-    isStarted: Boolean,
-    isRunning: Boolean,
-    foregroundEnabled: Boolean,
-    isAdditionalsShow: Boolean,
-    showHideAdditionals: () -> Unit,
-    reset: () -> Unit,
     startResume: (Long) -> Unit,
-    pause: () -> Unit,
     appendEditText: (Char) -> Unit,
     backspaceEditText: () -> Unit,
     clearEditText: () -> Unit,
-    remainingTime: Long,
     editTime: String,
     position: Int
 ) {
     val context = LocalContext.current
     val startDrawable = painterResource(R.drawable.round_play_arrow_24)
-    val pauseDrawable = painterResource(R.drawable.round_pause_24)
-    val stopDrawable = painterResource(R.drawable.round_stop_24)
-    val additionalsDrawable = painterResource(R.drawable.round_grid_view_24)
+//    val pauseDrawable = painterResource(R.drawable.round_pause_24)
+//    val stopDrawable = painterResource(R.drawable.round_stop_24)
+//    val additionalsDrawable = painterResource(R.drawable.round_grid_view_24)
     val backspaceDrawable = painterResource(R.drawable.round_backspace_24)
-//    val startButtonSizeAnimation by animateIntAsState(
-//        targetValue = if (isStarted) 120 else 300,
-//        animationSpec = keyframes { durationMillis = 250 },
+//    val heightAnimation by animateDpAsState(
+//        targetValue = if (isStarted) 0.dp else 100.dp,
+//        animationSpec = tween(500),
 //        label = ""
 //    )
-    val heightAnimation by animateDpAsState(
-        targetValue = if (isStarted) 0.dp else 100.dp,
-        animationSpec = tween(500),
-        label = ""
-    )
-
     Box(
         modifier = modifier,
         contentAlignment = Alignment.Center
@@ -487,14 +472,14 @@ fun DisplayKeyboard(
         val numberOfColumns = 3
         Column {
             repeat(numberOfColumns) { rowIndex ->
-                Row(modifier = Modifier.height(heightAnimation)) {
+                Row(modifier = Modifier.height(100.dp)) {
                     repeat(3) { columnIndex ->
                         val number = rowIndex * numberOfColumns + columnIndex + 1
                         BaseButton(
                             width = 100,
                             height = 100,
                             isMustBeAnimated = true,
-                            { appendEditText((number + '0'.code).toChar()) }
+                            onClick = { appendEditText((number + '0'.code).toChar()) }
                         ) {
                             Text(
                                 text = number.toString(),
@@ -507,72 +492,45 @@ fun DisplayKeyboard(
             }
             Row {
                 IconButton(
-                    painter = if (isStarted) additionalsDrawable else backspaceDrawable,
-                    contentDesc =
-                    if (isStarted) context.getString(R.string.additional_action)
-                    else context.getString(R.string.backspace),
-                    isMustBeAnimated = !isStarted
-                ) {
-                    if (isStarted)
-                        showHideAdditionals()
-                    else
-                        backspaceEditText()
-                }
+                    painter = backspaceDrawable,
+                    contentDesc = context.getString(R.string.backspace),
+                    isMustBeAnimated = true
+                ) { backspaceEditText() }
                 BaseButton(
                     width = 100,
                     height = 86,
-                    isMustBeAnimated = !isStarted,
-                    {
-                        if (isStarted)
-                            if (isRunning)
-                                pause()
-                            else
-                                startResume(remainingTime)
+                    isMustBeAnimated = true,
+                    onClick = {
+                        if (position < 6)
+                            appendEditText('0')
                         else
-                            if (position < 6)
-                                appendEditText('0')
-                            else
-                                clearEditText()
+                            clearEditText()
                     }
                 ) {
-                    if (isStarted)
-                        Icon(
-                            painter = if (isRunning) pauseDrawable else startDrawable,
-                            contentDescription =
-                            if (isRunning) context.getString(R.string.pause)
-                            else context.getString(R.string.resume),
-                            tint = MaterialTheme.colorScheme.onPrimary
-                        )
-                    else
-                        Text(
-                            text = if (position < 6) "0" else "C",
-                            fontSize = 24.sp,
-                            fontWeight = FontWeight.Medium
-                        )
+                    Text(
+                        text = if (position < 6) "0" else "C",
+                        fontSize = 24.sp,
+                        fontWeight = FontWeight.Medium
+                    )
                 }
                 BaseButton(
                     width = 100,
                     height = 86,
                     isMustBeAnimated = false,
                     {
-                        if (editTime == "000000" && !isStarted) {
+                        if (editTime == "000000") {
                             appendEditText('0')
                             appendEditText('0')
                         } else {
-                            if (isAdditionalsShow) showHideAdditionals()
-                            if (isStarted)
-                                reset()
-                            else {
-                                val hours = editTime.substring(0, 2).toInt()
-                                val minutes = editTime.substring(2, 4).toInt()
-                                val seconds = editTime.substring(4, 6).toInt()
-                                val startTime = hours * 3600 + minutes * 60 + seconds
-                                startResume(startTime * 1000L)
-                            }
+                            val hours = editTime.substring(0, 2).toInt()
+                            val minutes = editTime.substring(2, 4).toInt()
+                            val seconds = editTime.substring(4, 6).toInt()
+                            val startTime = hours * 3600 + minutes * 60 + seconds
+                            startResume(startTime * 1000L)
                         }
                     }
                 ) {
-                    if (editTime == "000000" && !isStarted)
+                    if (editTime == "000000")
                         Text(
                             text = "00",
                             fontSize = 24.sp,
@@ -580,10 +538,8 @@ fun DisplayKeyboard(
                         )
                     else
                         Icon(
-                            painter = if (isStarted) stopDrawable else startDrawable,
-                            contentDescription =
-                            if (isStarted) context.getString(R.string.stop)
-                            else context.getString(R.string.resume),
+                            painter = startDrawable,
+                            contentDescription = context.getString(R.string.start),
                             tint = MaterialTheme.colorScheme.onPrimary
                         )
                 }
