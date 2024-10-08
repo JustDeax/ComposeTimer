@@ -14,25 +14,12 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.runtime.Composable
@@ -42,13 +29,9 @@ import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.justdeax.composeTimer.timer.AlarmSettingsNavigator
@@ -56,15 +39,16 @@ import com.justdeax.composeTimer.timer.TimerReceiver
 import com.justdeax.composeTimer.timer.TimerViewModel
 import com.justdeax.composeTimer.timer.TimerViewModelFactory
 import com.justdeax.composeTimer.ui.DisplayAppName
+import com.justdeax.composeTimer.ui.DisplayButton
 import com.justdeax.composeTimer.ui.DisplayEditTime
 import com.justdeax.composeTimer.ui.DisplayKeyboard
+import com.justdeax.composeTimer.ui.DisplayTimers
 import com.justdeax.composeTimer.ui.theme.DarkColorScheme
 import com.justdeax.composeTimer.ui.theme.ExtraDarkColorScheme
 import com.justdeax.composeTimer.ui.theme.LightColorScheme
 import com.justdeax.composeTimer.ui.theme.Typography
 import com.justdeax.composeTimer.util.DataStoreManager
 import com.justdeax.composeTimer.util.TimerState2
-import com.justdeax.composeTimer.util.toFormatString
 
 class AppActivity : ComponentActivity(), AlarmSettingsNavigator {
     private val viewModel: TimerViewModel by viewModels {
@@ -155,125 +139,26 @@ class AppActivity : ComponentActivity(), AlarmSettingsNavigator {
                         else
                             DisplayTimers(timers) { addTimerScreenShow = true }
                         //DisplayOneTimer()
-
-                    }
-                }
-            }
-        }
-    }
-
-    @Composable
-    fun DisplayTimers(
-        timers: List<TimerState2>,
-        changeAddTimerScreenShow: () -> Unit
-    ) {
-//SW
-//Theme
-//LockAwake
-//ChangeTapOnClock
-//(*) NotificationEnabled
-//=== Records     Pause/Resume   AddLap/Stop
-
-//CT
-//Theme
-//LockAwake
-//Timer Ending
-//(*) NotificationEnabled
-//=== +1 minute  Pause/Resume   Stop
-
-//FOR TIMER
-//Timer sound
-//Timer vibrate
-//Epilepsy Enabled
-//MAKE ANALYTICS
-//Gradually increase volume ALWAYS TRUE
-//Infinity sound ALWAYS TRUE
-//Return Timer ALWAYS TRUE
-        val addDraw = painterResource(R.drawable.round_add_circle_24)
-        val playDraw = painterResource(R.drawable.round_play_arrow_24)
-        val pauseDraw = painterResource(R.drawable.round_pause_24)
-        val copyDraw = painterResource(R.drawable.round_content_copy_24)
-        val plusOneDraw = painterResource(R.drawable.round_exposure_plus_1_24)
-        val stopDraw = painterResource(R.drawable.round_stop_24)
-
-        Box(contentAlignment = Alignment.BottomCenter) {
-            LazyColumn(modifier = Modifier.fillMaxSize()) {
-                items(timers) { (timerDuration, remainingTime, isStarted, isRunning, name) ->
-                    Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp),
-                        shape = MaterialTheme.shapes.medium,
-                        colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceContainer
-                        )
-                    ) {
-                        Row(
-                            modifier = Modifier
+                        DisplayButton(
+                            Modifier
                                 .fillMaxWidth()
-                                .padding(10.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Box(contentAlignment = Alignment.Center) {
-                                CircularProgressIndicator(
-                                    progress = { (remainingTime.toFloat() / timerDuration) },
-                                    modifier = Modifier
-                                        .height(72.dp)
-                                        .aspectRatio(1f),
-                                    color = MaterialTheme.colorScheme.primary,
-                                    strokeWidth = 8.dp,
-                                    trackColor = MaterialTheme.colorScheme.surfaceContainer
-                                )
-                                Icon(
-                                    if (!isStarted || !isRunning) playDraw
-                                    else pauseDraw,
-                                    "",
-                                    Modifier.size(38.dp)
-                                )
-                            }
-                            Column(
-                                modifier = Modifier
-                                    .padding(10.dp, 0.dp)
-                                    .weight(1f)
-                            ) {
-                                Text(
-                                    text = name,
-                                    fontSize = 18.sp,
-                                    fontWeight = FontWeight.Medium,
-                                    color = MaterialTheme.colorScheme.secondary
-                                )
-                                Text(
-                                    text =
-                                    if (isStarted) remainingTime.toFormatString()
-                                    else timerDuration.toFormatString(),
-                                    fontSize = 42.sp,
-                                    fontWeight = FontWeight.Bold
-                                )
-                            }
-                            Icon(
-                                if (!isStarted) copyDraw
-                                else if (isRunning) plusOneDraw
-                                else stopDraw,
-                                "",
-                                Modifier.size(32.dp)
-                            )
-                        }
+                                .padding(top = 12.dp, bottom = 42.dp),
+                            viewModel.isStartedI.value!!,
+                            viewModel.isRunningI.value!!,
+                            false,
+                            {  },
+                            { viewModel.reset() },
+                            { newState -> viewModel.startResume(newState) },
+                            { viewModel.pause() },
+                            { newState -> viewModel.appendEditText(newState) },
+                            { viewModel.backspaceEditText() },
+                            { viewModel.clearEditText() },
+                            viewModel.remainingMsI.value!!,
+                            viewModel.editTime,
+                            viewModel.position
+                        )
                     }
                 }
-            }
-            FloatingActionButton(
-                onClick = {
-                    changeAddTimerScreenShow()
-                },
-                modifier = Modifier
-                    .padding(bottom = 50.dp)
-                    .size(80.dp)
-            ) {
-                Icon(
-                    addDraw,
-                    "",
-                    Modifier.size(28.dp)
-                )
             }
         }
     }
@@ -304,13 +189,14 @@ class AppActivity : ComponentActivity(), AlarmSettingsNavigator {
                 Modifier
                     .fillMaxWidth()
                     .padding(top = 12.dp, bottom = 42.dp),
-                { newState -> viewModel.startResume(newState) },
-                { newState -> viewModel.appendEditText(newState) },
-                { viewModel.backspaceEditText() },
-                { viewModel.clearEditText() },
-                viewModel.editTime,
-                viewModel.position
+                { newState -> viewModel.appendEditText(newState) }
             )
+//            { newState -> viewModel.startResume(newState) },
+//            { newState -> viewModel.appendEditText(newState) },
+//            { viewModel.backspaceEditText() },
+//            { viewModel.clearEditText() },
+//            viewModel.editTime,
+//            viewModel.position
         }
 
 //        DisplayActions(
