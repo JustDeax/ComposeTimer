@@ -24,22 +24,16 @@ class TimerViewModel(
     val foregroundEnabled = dataStoreManager.foregroundEnabled().asLiveData()
     val lockAwakeEnabled = dataStoreManager.lockAwakeEnabled().asLiveData()
 
-    fun changeTheme(themeCode: Int) {
-        viewModelScope.launch {
-            dataStoreManager.changeTheme(themeCode)
-        }
+    fun changeTheme(themeCode: Int) = viewModelScope.launch {
+        dataStoreManager.changeTheme(themeCode)
     }
 
-    fun changeForegroundEnabled(enabled: Boolean) {
-        viewModelScope.launch {
-            dataStoreManager.changeForegroundEnabled(enabled)
-        }
+    fun changeForegroundEnabled(enabled: Boolean) = viewModelScope.launch {
+        dataStoreManager.changeForegroundEnabled(enabled)
     }
 
-    fun changeLockAwakeEnabled(enabled: Boolean) {
-        viewModelScope.launch {
-            dataStoreManager.changeLockAwakeEnabled(enabled)
-        }
+    fun changeLockAwakeEnabled(enabled: Boolean) = viewModelScope.launch {
+        dataStoreManager.changeLockAwakeEnabled(enabled)
     }
 
     fun saveEditTime() {

@@ -37,7 +37,7 @@ fun DisplayActions(
     theme: Int,
     changeTheme: (Int) -> Unit,
     lockAwakeEnabled: Boolean,
-    changeLockAwakeEnabled: (Boolean) -> Unit
+    changeLockAwakeEnabled: () -> Unit
 ) {
     val context = LocalContext.current
     val savedTimersDraw = painterResource(R.drawable.round_casino_24)
@@ -89,7 +89,7 @@ fun DisplayActions(
         OutlineIconButton(
             modifier = modifier,
             onClick = {
-                changeLockAwakeEnabled(!lockAwakeEnabled)
+                changeLockAwakeEnabled()
                 showLockAwakeDialog = true
             },
             painter = if (lockAwakeEnabled) lockAwake else unlockAwake,

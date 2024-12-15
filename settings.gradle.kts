@@ -1,3 +1,4 @@
+@file:Suppress("UnstableApiUsage")
 pluginManagement {
     repositories {
         google {
@@ -21,4 +22,3 @@ dependencyResolutionManagement {
 
 rootProject.name = "Compose Timer"
 include(":app")
- 
